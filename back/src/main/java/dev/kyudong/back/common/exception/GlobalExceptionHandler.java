@@ -1,0 +1,46 @@
+package dev.kyudong.back.common.exception;
+
+import dev.kyudong.back.user.exception.UserAlreadyExistsException;
+import dev.kyudong.back.user.exception.UserNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.Instant;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+	@ExceptionHandler(UserAlreadyExistsException.class)
+	protected ResponseEntity<ProblemDetail> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+		problemDetail.setTitle("Duplicate User");
+		problemDetail.setStatus(HttpStatus.CONFLICT);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleUserNotFoundException(UserNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("User Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(InvalidInputException.class)
+	protected ResponseEntity<ProblemDetail> handleInvalidInputExceptionException(InvalidInputException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+		problemDetail.setTitle("Invalid Input Value");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
+}

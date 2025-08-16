@@ -1,0 +1,44 @@
+# ===================================================================
+# Server Configuration
+# ===================================================================
+server:
+  port: 8080
+
+# ===================================================================
+# Spring Boot Core Configuration
+# ===================================================================
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/signalpost
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: SignalPost-HikariCP
+      minimum-idle: 5 # 커넥션 풀이 유지하는 최소 유휴(idle) 커넥션 개수
+      maximum-pool-size: 20 # 커넥션 풀이 가질 수 있는 최대 커넥션 개수 (가장 중요한 성능 지표)
+      auto-commit: false
+      connection-timeout: 30000 # 커넥션을 얻기 위해 대기하는 최대 시간 (ms)
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        default_batch_fetch_size: 100 # N+1 문제 해결을 위한 배치 사이즈 설정 (성능 튜닝)
+    open-in-view: false
+
+# ===================================================================
+# Springdoc (Swagger UI) Configuration
+# ===================================================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha # 태그(Controller) 정렬 순서: 알파벳순
+    operations-sorter: alpha # API(Operation) 정렬 순서: 알파벳순
+  # 기본 요청/응답 미디어 타입 설정
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
