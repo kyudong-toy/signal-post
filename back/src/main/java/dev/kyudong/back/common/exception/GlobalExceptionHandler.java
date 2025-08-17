@@ -1,5 +1,6 @@
 package dev.kyudong.back.common.exception;
 
+import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -42,5 +43,26 @@ public class GlobalExceptionHandler {
 		problemDetail.setProperty("timestamp", Instant.now());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
 	}
+
+	@ExceptionHandler(PostNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handlePostNotFoundException(PostNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Post Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(InvalidAccessException.class)
+	protected ResponseEntity<ProblemDetail> handleInvalidAccessException(InvalidAccessException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+		problemDetail.setTitle("Access Denied");
+		problemDetail.setStatus(HttpStatus.UNAUTHORIZED);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
+	}
+
 
 }

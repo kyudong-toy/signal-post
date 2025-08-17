@@ -1,6 +1,7 @@
 package dev.kyudong.back.user.domain;
 
 import dev.kyudong.back.common.exception.InvalidInputException;
+import dev.kyudong.back.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -35,6 +38,9 @@ public class User {
 	@CreatedDate
 	@Column(name = "CREATED_AT", updatable = false)
 	private Instant createdAt;
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+	private final List<Post> postList = new ArrayList<>();
 
 	@Builder
 	public User(String userName, String passWord) {
@@ -67,6 +73,11 @@ public class User {
 
 	public void deleteUser() {
 		this.status = UserStatus.DELETED;
+	}
+
+	public void addPost(@NonNull Post post) {
+		this.postList.add(post);
+		post.associateUser(this);
 	}
 
 }
