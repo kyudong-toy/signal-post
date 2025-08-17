@@ -10,6 +10,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -40,12 +42,15 @@ public class Post {
 	private Instant createdAt;
 
 	@LastModifiedDate
-	@Column(name = "UPDATED_AT")
+	@Column(name = "MODIFIED_AT")
 	private Instant modifiedAt;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
 	private PostStatus status;
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "post")
+	private List<Comment> commentList = new ArrayList<>();
 
 	@Builder
 	public Post(String subject, String content) {
@@ -98,6 +103,18 @@ public class Post {
 	 */
 	public void associateUser(User user) {
 		this.user = user;
+	}
+
+	public void addComment(@NonNull Comment comment) {
+		this.commentList.add(comment);
+		comment.associatePost(this);
+	}
+
+	public void addComments(@NonNull List<Comment> comments) {
+		this.commentList.addAll(comments);
+		for (Comment comment : comments) {
+			comment.associatePost(this);
+		}
 	}
 
 }
