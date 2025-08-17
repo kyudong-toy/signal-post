@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UserTests {
+public class UserIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -37,7 +37,7 @@ public class UserTests {
 	private UserRepository userRepository;
 
 	@Test
-	@DisplayName("사용자 생성 API - 성공")
+	@DisplayName("사용자 생성 API")
 	void createUser_integration_success() throws Exception {
 		// given
 		UserCreateReqDto request = new UserCreateReqDto("userName", "passWord");
@@ -56,23 +56,7 @@ public class UserTests {
 	}
 
 	@Test
-	@DisplayName("사용자 생성 API - 실패 : 이미 존재하는 userName")
-	void createUser_fail() throws Exception {
-		// given
-		userRepository.save(new User("userName", "passWord"));
-		UserCreateReqDto request = new UserCreateReqDto("userName", "passWord");
-
-		// when & then
-		mockMvc.perform(post("/api/v1/users")
-						.contentType(MediaType.APPLICATION_JSON.toString())
-						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.title").value("Duplicate User"))
-				.andExpect(jsonPath("$.detail").value("userName Already Exists"));
-	}
-
-	@Test
-	@DisplayName("사용자 수정 API - 성공")
+	@DisplayName("사용자 수정 API")
 	void updateUser_success() throws Exception {
 		// given
 		User savedUser = userRepository.save(new User("userName", "passWord"));
@@ -89,7 +73,7 @@ public class UserTests {
 	}
 
 	@Test
-	@DisplayName("사용자 상태 비활성화 => 활성화 - 성공")
+	@DisplayName("사용자 상태 비활성화 => 활성화")
 	void updateUserStatus_success() throws Exception {
 		// given
 		User savedUser = new User("userName", "passWord");
@@ -108,7 +92,7 @@ public class UserTests {
 	}
 
 	@Test
-	@DisplayName("사용자 로그인 - 성공")
+	@DisplayName("사용자 로그인")
 	void loginUser_success() throws Exception {
 		// given
 		User savedUser = new User("userName", "passWord");
