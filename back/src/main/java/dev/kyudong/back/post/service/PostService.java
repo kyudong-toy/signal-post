@@ -38,7 +38,7 @@ public class PostService {
 					return new PostNotFoundException("Post {" + postId + "} Not Found");
 				});
 
-		log.info("게시글 조회 요청 성공: postId: {}", postId);
+		log.info("게시글 조회 성공: postId: {}", postId);
 		return PostDetailResDto.from(post);
 	}
 
@@ -59,7 +59,7 @@ public class PostService {
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
 
-		log.info("게시글 수정 요청 성공: userId: {}, postId: {}", savedPost.getUser().getId(), savedPost.getId());
+		log.info("게시글 생성 성공: userId: {}, postId: {}", savedPost.getUser().getId(), savedPost.getId());
 		return PostCreateResDto.from(savedPost);
 	}
 
@@ -86,7 +86,7 @@ public class PostService {
 			post.updateContent(request.content());
 		}
 
-		log.info("게시글 수정 요청 성공: userId: {}, postId: {}", post.getUser().getId(), post.getId());
+		log.info("게시글 수정 성공: userId: {}, postId: {}", post.getUser().getId(), post.getId());
 		return PostUpdateResDto.from(post);
 	}
 
@@ -114,7 +114,7 @@ public class PostService {
 			}
 		}
 
-		log.info("게시글 상태 수정 요청 성공: userId: {}, postId: {}, status: {}", post.getUser().getId(), post.getId(), post.getStatus().name());
+		log.info("게시글 상태 수정 성공: userId: {}, postId: {}, status: {}", post.getUser().getId(), post.getId(), post.getStatus().name());
 		return PostStatusUpdateResDto.from(post);
 	}
 
