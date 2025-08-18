@@ -42,3 +42,14 @@ springdoc:
   # 기본 요청/응답 미디어 타입 설정
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# ===================================================================
+# log Configuration
+# ===================================================================
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate: INFO
+    org.apache.tomcat: INFO
+    dev.kyudong.back: DEBUG
