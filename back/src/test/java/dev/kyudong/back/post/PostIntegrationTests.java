@@ -1,6 +1,7 @@
 package dev.kyudong.back.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.api.dto.req.PostCreateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostUpdateReqDto;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,9 +52,12 @@ public class PostIntegrationTests {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private JwtUtil jwtUtil;
+
 	private User createTestUser() {
 		User newUser = User.builder()
-				.username("testUser")
+				.username("mockUser")
 				.rawPassword("password")
 				.encodedPassword(passwordEncoder.encode("password"))
 				.build();
@@ -70,10 +75,10 @@ public class PostIntegrationTests {
 				.build();
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
-		long postId = savedPost.getId();
+		final Long postId = savedPost.getId();
 
 		// when & then
-		mockMvc.perform(get("/api/v1/post/{postId}", postId))
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.postId").value(postId))
 				.andExpect(jsonPath("$.subject").value("Test"))
@@ -86,15 +91,16 @@ public class PostIntegrationTests {
 	void createPost() throws Exception {
 		// given
 		User user = createTestUser();
-		PostCreateReqDto request = new PostCreateReqDto(user.getId(), "Test", "Hello Post!");
+		PostCreateReqDto request = new PostCreateReqDto( "Test", "Hello Post!");
 
 		// when
-		MvcResult result = mockMvc.perform(post("/api/v1/post")
+		MvcResult result = mockMvc.perform(post("/api/v1/posts")
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 						.andExpect(status().isCreated())
 						.andExpect(header().exists("Location"))
-						.andExpect(header().string("Location", CoreMatchers.containsString("/api/v1/post/")))
+						.andExpect(header().string("Location", CoreMatchers.containsString("/api/v1/posts/")))
 						.andDo(print())
 						.andReturn();
 
@@ -124,10 +130,11 @@ public class PostIntegrationTests {
 				.build();
 		user.addPost(post);
 		Post savedPost = postRepository.save(post);
-		PostUpdateReqDto request = new PostUpdateReqDto(user.getId(), "Test", "Hello Java!");
+		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello Java!");
 
 		// when
-		MvcResult result = mockMvc.perform(patch("/api/v1/post/{postId}/update", savedPost.getId())
+		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/update", savedPost.getId())
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 						.andExpect(status().isOk())
@@ -153,10 +160,11 @@ public class PostIntegrationTests {
 				.build();
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
-		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(user.getId(), PostStatus.DELETED);
+		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(PostStatus.DELETED);
 
 		// when & then
-		mockMvc.perform(patch("/api/v1/post/{postId}/status", savedPost.getId())
+		mockMvc.perform(patch("/api/v1/posts/{postId}/status", savedPost.getId())
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 					.andExpect(status().isOk())
