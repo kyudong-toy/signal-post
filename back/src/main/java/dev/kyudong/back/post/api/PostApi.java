@@ -7,6 +7,7 @@ import dev.kyudong.back.post.api.dto.res.PostCreateResDto;
 import dev.kyudong.back.post.api.dto.res.PostDetailResDto;
 import dev.kyudong.back.post.api.dto.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.api.dto.res.PostUpdateResDto;
+import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -16,9 +17,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -73,7 +77,7 @@ public interface PostApi {
 	})
 	ResponseEntity<PostDetailResDto> findPostById(
 			@Parameter(name = "postId", description = "조회할 게시글의 ID", required = true, example = "1")
-			@PathVariable long postId
+			@PathVariable @Positive Long postId
 	);
 
 	@SuppressWarnings("unused")
@@ -119,7 +123,10 @@ public interface PostApi {
 					)
 			),
 	})
-	ResponseEntity<PostCreateResDto> createUser(@RequestBody PostCreateReqDto request);
+	ResponseEntity<PostCreateResDto> createUser(
+			@RequestBody @Valid PostCreateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
+	);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
@@ -175,8 +182,9 @@ public interface PostApi {
 	})
 	ResponseEntity<PostUpdateResDto> updatePost(
 			@Parameter(name = "postId", description = "수정할 게시글의 ID", required = true, example = "1")
-			@PathVariable long postId,
-			@RequestBody PostUpdateReqDto request
+			@PathVariable @Positive Long postId,
+			@RequestBody @Valid PostUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
 
 	@SuppressWarnings("unused")
@@ -232,8 +240,9 @@ public interface PostApi {
 	})
 	ResponseEntity<PostStatusUpdateResDto> updatePostStatus(
 			@Parameter(name = "postId", description = "상태를 수정할 게시글의 ID", required = true, example = "1")
-			@PathVariable long postId,
-			@RequestBody PostStatusUpdateReqDto request
+			@PathVariable @Positive Long postId,
+			@RequestBody @Valid PostStatusUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
 
 }

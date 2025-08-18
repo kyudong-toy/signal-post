@@ -35,7 +35,7 @@ public class PostService {
 
 		Post post = postRepository.findById(postId).orElseThrow(() -> {
 					log.warn("게시글 조회 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-					return new PostNotFoundException("Post {" + postId + "} Not Found");
+					return new PostNotFoundException(postId);
 				});
 
 		log.info("게시글 조회 요청 성공: postId: {}", postId);
@@ -43,14 +43,14 @@ public class PostService {
 	}
 
 	@Transactional
-	public PostCreateResDto createPost(PostCreateReqDto request) {
-		log.debug("게시글 생성 요청 시작: userId: {}, subject: {}", request.userId(), request.subject());
+	public PostCreateResDto createPost(final Long userId, PostCreateReqDto request) {
+		log.debug("게시글 생성 요청 시작: userId: {}, subject: {}", userId, request.subject());
 
-		User user = userRepository.findById(request.userId())
-				.orElseThrow(() -> {
-					log.warn("사용자 조회 실패 - 존재하지 않는 사용자 : userId: {}", request.userId());
-					return new UserNotFoundException("User {" + request.userId() + "} Not Found");
-				});
+		if (!userRepository.existsById(userId)) {
+			log.warn("사용자 조회 실패 - 존재하지 않는 사용자 : id: {}", userId);
+			throw new UserNotFoundException("User: {"+ userId + "} Not Found");
+		}
+		User user = userRepository.getReferenceById(userId);
 
 		Post newPost = Post.builder()
 				.subject(request.subject())
@@ -59,23 +59,23 @@ public class PostService {
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
 
-		log.info("게시글 수정 요청 성공: userId: {}, postId: {}", savedPost.getUser().getId(), savedPost.getId());
+		log.info("게시글 생성 요청 성공: userId: {}, postId: {}", savedPost.getUser().getId(), savedPost.getId());
 		return PostCreateResDto.from(savedPost);
 	}
 
 	@Transactional
-	public PostUpdateResDto updatePost(long postId, PostUpdateReqDto request) {
-		log.debug("게시글 수정 요청 시작: userId: {}, postId: {}", request.userId(), postId);
+	public PostUpdateResDto updatePost(final Long postId, final Long userId, PostUpdateReqDto request) {
+		log.debug("게시글 수정 요청 시작: userId: {}, postId: {}", userId, postId);
 
 		Post post = postRepository.findById(postId)
 				.orElseThrow(() -> {
 					log.warn("게시글 수정 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-					return new PostNotFoundException("Post {" + postId + "} Not Found");
+					return new PostNotFoundException(postId);
 				});
 
-		if (!post.getUser().getId().equals(request.userId())) {
-			log.warn("게시글 수정 실패 - 권한 없음 : userId: {}, postId: {}", request.userId(), postId);
-			throw new InvalidAccessException("User {" + request.userId() + "} has no permission to update post " + postId);
+		if (!post.getUser().getId().equals(userId)) {
+			log.warn("게시글 수정 실패 - 권한 없음 : userId: {}, postId: {}", userId, postId);
+			throw new InvalidAccessException("User {" + userId + "} has no permission to update post " + postId);
 		}
 
 		if (StringUtils.hasText(request.subject())) {
@@ -86,23 +86,23 @@ public class PostService {
 			post.updateContent(request.content());
 		}
 
-		log.info("게시글 수정 요청 성공: userId: {}, postId: {}", post.getUser().getId(), post.getId());
+		log.info("게시글 수정 요청 성공: userId: {}, postId: {}", userId, post.getId());
 		return PostUpdateResDto.from(post);
 	}
 
 	@Transactional
-	public PostStatusUpdateResDto updatePostStatus(long postId, PostStatusUpdateReqDto request) {
-		log.debug("게시글 상태 수정 요청 시작: userId: {}, postId: {}", request.userId(), postId);
+	public PostStatusUpdateResDto updatePostStatus(final Long postId, final Long userId, PostStatusUpdateReqDto request) {
+		log.debug("게시글 상태 수정 요청 시작: userId: {}, postId: {}", userId, postId);
 
 		Post post = postRepository.findById(postId)
 				.orElseThrow(() -> {
 					log.warn("게시글 상태 수정 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-					return new PostNotFoundException("Post {" + postId + "} Not Found");
+					return new PostNotFoundException(postId);
 				});
 
-		if (!post.getUser().getId().equals(request.userId())) {
-			log.warn("게시글 상태 수정 실패 - 권한 없음 : userId: {}, postId: {}", request.userId(), postId);
-			throw new InvalidAccessException("User {" + request.userId() + "} has no permission to update post status " + postId);
+		if (!post.getUser().getId().equals(userId)) {
+			log.warn("게시글 상태 수정 실패 - 권한 없음 : userId: {}, postId: {}", userId, postId);
+			throw new InvalidAccessException("User {" + userId + "} has no permission to update post status " + postId);
 		}
 
 		switch (request.status()) {

@@ -34,8 +34,7 @@ public class SecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.sessionManagement(seession -> seession.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth ->
-					auth.requestMatchers(HttpMethod.GET, "/api/v1/post").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
+					auth.requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/v1/users", "/api/v1/users/login").permitAll()
 						.anyRequest().authenticated()

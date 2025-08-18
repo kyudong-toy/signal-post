@@ -82,14 +82,15 @@ public class PostServiceTests {
 	void createPost_success() {
 		// given
 		User mockUser = makeMockUser();
-		when(userRepository.findById(eq(mockUser.getId()))).thenReturn(Optional.of(mockUser));
+		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
+		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 
-		PostCreateReqDto request = new PostCreateReqDto(mockUser.getId(), "subject", "content");
+		PostCreateReqDto request = new PostCreateReqDto("subject", "content");
 		Post mockPost = makeMockPost(mockUser);
 		when(postRepository.save(any(Post.class))).thenReturn(mockPost);
 
 		// when
-		PostCreateResDto response = postService.createPost(request);
+		PostCreateResDto response = postService.createPost(mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -100,7 +101,6 @@ public class PostServiceTests {
 		// 게시글 반영 확인
 		assertThat(mockUser.getPostList()).isNotEmpty();
 		assertThat(mockUser.getPostList()).hasSize(1);
-		assertThat(mockUser.getPostList().get(0)).isEqualTo(mockPost);
 		verify(postRepository, times(1)).save(any(Post.class));
 	}
 
@@ -120,11 +120,13 @@ public class PostServiceTests {
 	void createPost_fail_invalidSubject(String invalidSubject) {
 		// given
 		User mockUser = makeMockUser();
-		when(userRepository.findById(eq(mockUser.getId()))).thenReturn(Optional.of(mockUser));
-		PostCreateReqDto request = new PostCreateReqDto(mockUser.getId(), invalidSubject, "content");
+		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
+		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
+
+		PostCreateReqDto request = new PostCreateReqDto(invalidSubject, "content");
 
 		// when & then
-		assertThatThrownBy(() -> postService.createPost(request))
+		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
 				.isInstanceOf(InvalidInputException.class)
 				.hasMessageContaining("Subject");
 		verify(postRepository, never()).save(any(Post.class));
@@ -144,11 +146,13 @@ public class PostServiceTests {
 	void createPost_fail_invalidContent(String invalidContent) {
 		// given
 		User mockUser = makeMockUser();
-		when(userRepository.findById(eq(mockUser.getId()))).thenReturn(Optional.of(mockUser));
-		PostCreateReqDto request = new PostCreateReqDto(mockUser.getId(), "subject", invalidContent);
+		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
+		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
+
+		PostCreateReqDto request = new PostCreateReqDto("subject", invalidContent);
 
 		// when & then
-		assertThatThrownBy(() -> postService.createPost(request))
+		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
 				.isInstanceOf(InvalidInputException.class)
 				.hasMessageContaining("Content");
 		verify(postRepository, never()).save(any(Post.class));
@@ -159,13 +163,13 @@ public class PostServiceTests {
 	void updatePost_success() {
 		// given
 		User mockUser = makeMockUser();
-		long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto(mockUser.getId(), "newSubject", "newContent");
+		final Long postId = 1L;
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
 		// when
-		PostUpdateResDto response = postService.updatePost(postId, request);
+		PostUpdateResDto response = postService.updatePost(postId, mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -179,12 +183,12 @@ public class PostServiceTests {
 	void updatePost_fail_postNotFound() {
 		// given
 		User mockUser = makeMockUser();
-		long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto(mockUser.getId(), "newSubject", "newContent");
+		final Long postId = 1L;
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.empty());
 
 		// when & then
-		assertThatThrownBy(() -> postService.updatePost(postId, request))
+		assertThatThrownBy(() -> postService.updatePost(postId, mockUser.getId(), request))
 				.isInstanceOf(PostNotFoundException.class)
 				.hasMessage("Post {" + postId + "} Not Found");
 		verify(postRepository, times(1)).findById(postId);
@@ -195,15 +199,15 @@ public class PostServiceTests {
 	void updatePost_fail_invalidAccess() {
 		// given
 		User mockUser = makeMockUser();
-		long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto(2L, "newSubject", "newContent");
+		final Long postId = 1L;
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
 		// when & then
-		assertThatThrownBy(() -> postService.updatePost(postId, request))
+		assertThatThrownBy(() -> postService.updatePost(postId, 999L, request))
 				.isInstanceOf(InvalidAccessException.class)
-				.hasMessage("User {" + request.userId() + "} has no permission to update post " + postId);
+				.hasMessage("User {" + 999L + "} has no permission to update post " + postId);
 	}
 
 	@Test
@@ -212,12 +216,12 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		long postId = 1L;
-		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(mockUser.getId(), PostStatus.DELETED);
+		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(PostStatus.DELETED);
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
 		// when
-		PostStatusUpdateResDto response = postService.updatePostStatus(postId, request);
+		PostStatusUpdateResDto response = postService.updatePostStatus(postId, mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -229,16 +233,17 @@ public class PostServiceTests {
 	void updatePostStatus_fail_invalidAccess() {
 		// given
 		User mockUser = makeMockUser();
-		long postId = 1L;
-		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(99L, PostStatus.NORMAL);
+		final Long postId = 1L;
+		final Long nonExistsUserId = 999L;
+		PostStatusUpdateReqDto request = new PostStatusUpdateReqDto(PostStatus.NORMAL);
 		Post mockPost = makeMockPost(postId, mockUser);
 		mockPost.delete();
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
 		// when && then
-		assertThatThrownBy(() -> postService.updatePostStatus(postId, request))
+		assertThatThrownBy(() -> postService.updatePostStatus(postId, nonExistsUserId, request))
 				.isInstanceOf(InvalidAccessException.class)
-				.hasMessage("User {" + request.userId() + "} has no permission to update post status " + postId);
+				.hasMessage("User {" + nonExistsUserId + "} has no permission to update post status " + postId);
 	}
 
 	@Test

@@ -131,7 +131,7 @@ public class CommentControllerTests {
 		Long postId = mockPost.getId();
 		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), "Hello Comment");
 		when(commentService.createComment(eq(postId), any(CommentCreateReqDto.class)))
-				.thenThrow(new PostNotFoundException("Post {" + postId + "} Not Found"));
+				.thenThrow(new PostNotFoundException(postId));
 
 		// when & then
 		mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)

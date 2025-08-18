@@ -51,7 +51,7 @@ public class CommentService {
 
 		if (!postRepository.existsById(postId)) {
 			log.warn("댓글 생성 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-			throw new PostNotFoundException("Post {" + postId + "} Not Found");
+			throw new PostNotFoundException(postId);
 		}
 		Post post = postRepository.getReferenceById(postId);
 
@@ -78,7 +78,7 @@ public class CommentService {
 
 		if (!postRepository.existsById(postId)) {
 			log.warn("댓글 수정 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-			throw new PostNotFoundException("Post {" + postId + "} Not Found");
+			throw new PostNotFoundException(postId);
 		}
 
 		Comment comment = commentRepository.findById(commentId)
@@ -106,7 +106,7 @@ public class CommentService {
 
 		if (!postRepository.existsById(postId)) {
 			log.warn("댓글 상태 수정 실패 - 존재하지 않는 게시글 : postId: {}", postId);
-			throw new PostNotFoundException("Post {" + postId + "} Not Found");
+			throw new PostNotFoundException(postId);
 		}
 
 		Comment comment = commentRepository.findById(commentId)
