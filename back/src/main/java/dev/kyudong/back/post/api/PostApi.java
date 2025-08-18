@@ -47,7 +47,7 @@ public interface PostApi {
 									"""
 									{
 										"id": 1,
-										"userName": "testUser"
+										"username": "testUser"
 									}
 									"""
 							)
