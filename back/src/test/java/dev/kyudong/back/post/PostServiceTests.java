@@ -48,7 +48,11 @@ public class PostServiceTests {
 	private PostService postService;
 
 	private static User makeMockUser() {
-		User mockUser = new User("userName", "passWord");
+		User mockUser = User.builder()
+				.username("username")
+				.rawPassword("passWord")
+				.encodedPassword("passWord")
+				.build();
 		ReflectionTestUtils.setField(mockUser, "id", 1L);
 		return mockUser;
 	}

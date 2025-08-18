@@ -1,16 +1,15 @@
 package dev.kyudong.back.user.api.dto.res;
 
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.domain.UserStatus;
 
 public record UserLoginResDto(
-		long id,
-		String userName,
-		UserStatus status
+		Long id,
+		String username,
+		String token
 ) {
-	public static UserLoginResDto from(User user) {
+	public static UserLoginResDto from(User user, String token) {
 		return new UserLoginResDto(
-				user.getId(), user.getUserName(), user.getStatus()
+				user.getId(), user.getUsername(), token
 		);
 	}
 }

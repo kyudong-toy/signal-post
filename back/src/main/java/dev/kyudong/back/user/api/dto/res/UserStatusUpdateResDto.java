@@ -4,7 +4,7 @@ import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.domain.UserStatus;
 
 public record UserStatusUpdateResDto(
-		long id,
+		Long id,
 		UserStatus status
 ) {
 	public static UserStatusUpdateResDto from(User user) {

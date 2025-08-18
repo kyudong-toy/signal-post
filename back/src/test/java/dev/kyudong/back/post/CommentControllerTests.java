@@ -47,7 +47,11 @@ public class CommentControllerTests {
 	private CommentService commentService;
 
 	private static User makeMockUser() {
-		User mockUser = new User("userName", "passWord");
+		User mockUser = User.builder()
+				.username("username")
+				.rawPassword("rawPassword")
+				.encodedPassword("encodedPassword")
+				.build();
 		ReflectionTestUtils.setField(mockUser, "id", 1L);
 		return mockUser;
 	}
