@@ -1,5 +1,6 @@
 package dev.kyudong.back.common.exception;
 
+import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
 import dev.kyudong.back.user.exception.UserNotFoundException;
@@ -64,5 +65,14 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
 	}
 
+	@ExceptionHandler(CommentNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleCommentNotFoundException(CommentNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Comment Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
 
 }

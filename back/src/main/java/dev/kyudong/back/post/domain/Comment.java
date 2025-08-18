@@ -10,16 +10,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
-@ToString
-@Table(name = "POST")
+@ToString(exclude = {"post", "user"}) // post, user 무한 참조 방지
+@Table(name = "COMMENTS")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Post {
+public class Comment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +25,12 @@ public class Post {
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "POST_ID", nullable = false)
+	private Post post;
+
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_ID", nullable = false)
 	private User user;
-
-	@Column(name = "SUBJECT", length = 100, nullable = false)
-	private String subject;
 
 	@Lob
 	@Column(name = "CONTENT", nullable = false)
@@ -47,35 +46,14 @@ public class Post {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
-	private PostStatus status;
-
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "post")
-	private List<Comment> commentList = new ArrayList<>();
+	private CommentStatus status = CommentStatus.NORMAL;
 
 	@Builder
-	public Post(String subject, String content) {
-		validSubject(subject);
+	private Comment(String content, @NonNull User user) {
 		validContent(content);
-		Instant now = Instant.now();
-		this.subject = subject;
 		this.content = content;
-		this.createdAt = now;
-		this.modifiedAt = now;
-		this.status = PostStatus.NORMAL;
-	}
-
-	public void updateSubject(String subject) {
-		validSubject(subject);
-		this.subject = subject;
-	}
-
-	private void validSubject(String subject) {
-		if (!StringUtils.hasText(subject)) {
-			throw new InvalidInputException("Subject must not be null");
-		}
-		if (subject.length() > 100) {
-			throw new InvalidInputException("Subject cannot be longer than 100 characters.");
-		}
+		this.user = user;
+		this.status = CommentStatus.NORMAL;
 	}
 
 	public void updateContent(String content) {
@@ -90,31 +68,19 @@ public class Post {
 	}
 
 	public void delete() {
-		this.status = PostStatus.DELETED;
+		this.status = CommentStatus.DELETED;
 	}
 
 	public void restore() {
-		this.status = PostStatus.NORMAL;
+		this.status = CommentStatus.NORMAL;
 	}
 
 	/**
-	 * addPost를 이용한 호출을 권장합니다.
-	 * @param user 게시글 소유자.
+	 * addComment를 이용한 호출을 권장합니다.
+	 * @param post 댓글이 작성된 게시글.
 	 */
-	public void associateUser(User user) {
-		this.user = user;
-	}
-
-	public void addComment(@NonNull Comment comment) {
-		this.commentList.add(comment);
-		comment.associatePost(this);
-	}
-
-	public void addComments(@NonNull List<Comment> comments) {
-		this.commentList.addAll(comments);
-		for (Comment comment : comments) {
-			comment.associatePost(this);
-		}
+	public void associatePost(@NonNull Post post) {
+		this.post = post;
 	}
 
 }

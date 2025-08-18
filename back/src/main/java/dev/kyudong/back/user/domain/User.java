@@ -1,6 +1,7 @@
 package dev.kyudong.back.user.domain;
 
 import dev.kyudong.back.common.exception.InvalidInputException;
+import dev.kyudong.back.post.domain.Comment;
 import dev.kyudong.back.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +42,9 @@ public class User {
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
 	private final List<Post> postList = new ArrayList<>();
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+	private final List<Comment> commentList = new ArrayList<>();
 
 	@Builder
 	public User(String userName, String passWord) {
