@@ -12,10 +12,10 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
-@ToString
 @Table(name = "USERS")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,44 +27,67 @@ public class User {
 	private Long id;
 
 	@Column(name = "USER_NAME", unique = true, nullable = false, length = 30)
-	private String userName;
+	private String username;
 
 	@Column(name = "PASS_WORD", nullable = false, length = 150)
-	private String passWord;
+	private String password;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false, length = 20)
 	private UserStatus status;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "ROLE", nullable = false, length = 20)
+	private UserRole role;
 
 	@CreatedDate
 	@Column(name = "CREATED_AT", updatable = false)
 	private Instant createdAt;
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-	private final List<Post> postList = new ArrayList<>();
+	private List<Post> postList = new ArrayList<>();
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-	private final List<Comment> commentList = new ArrayList<>();
+	private List<Comment> commentList = new ArrayList<>();
 
 	@Builder
-	public User(String userName, String passWord) {
-		this.userName = userName;
-		this.passWord = passWord;
+	private User(String username, String rawPassword, String encodedPassword, UserRole role) {
+		validateUsername(username);
+		validatePassword(rawPassword);
+		this.username = username;
+		this.password = encodedPassword;
 		this.status = UserStatus.ACTIVE;
 		this.createdAt = Instant.now();
+		this.role = Objects.requireNonNullElse(role, UserRole.USER);
 	}
 
-	public void updatepassWord(String newpassWord) {
-		if (!StringUtils.hasText(newpassWord)) {
+	private void validateUsername(String username) {
+		if (!StringUtils.hasText(username)) {
+			throw new InvalidInputException("Username must not be null");
+		}
+		if (username.length() < 4) {
+			throw new InvalidInputException("Username must be at least 4 characters long.");
+		}
+		if (username.length() > 30) {
+			throw new InvalidInputException("Username cannot be longer than 30 characters.");
+		}
+	}
+
+	public void updatepassWord(String rawPassword, String encodedPassword) {
+		validatePassword(rawPassword);
+		this.password = encodedPassword;
+	}
+
+	private void validatePassword(String rawPassword) {
+		if (!StringUtils.hasText(rawPassword)) {
 			throw new InvalidInputException("Password must not be null");
 		}
-		if (newpassWord.length() < 4) {
+		if (rawPassword.length() < 4) {
 			throw new InvalidInputException("Password must be at least 4 characters long.");
 		}
-		if (newpassWord.length() > 150) {
+		if (rawPassword.length() > 150) {
 			throw new InvalidInputException("Password cannot be longer than 150 characters.");
 		}
-		this.passWord = newpassWord;
 	}
 
 	public void activeUser() {

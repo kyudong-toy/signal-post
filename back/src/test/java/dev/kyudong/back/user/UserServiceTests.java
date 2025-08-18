@@ -1,6 +1,7 @@
 package dev.kyudong.back.user;
 
 import dev.kyudong.back.common.exception.InvalidInputException;
+import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.user.api.dto.req.UserCreateReqDto;
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
 import dev.kyudong.back.user.api.dto.req.UserStatusUpdateReqDto;
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
@@ -40,6 +42,12 @@ public class UserServiceTests {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private PasswordEncoder passwordEncoder;
+
+	@Mock
+	private JwtUtil jwtUtil;
+
 	@InjectMocks
 	private UserService userService;
 
@@ -47,34 +55,64 @@ public class UserServiceTests {
 	@DisplayName("사용자 생성 - 성공")
 	void createUser_success() {
 		// given
-		UserCreateReqDto request = new UserCreateReqDto("userName", "passWord");
-		when(userRepository.existsByUserName("userName")).thenReturn(false);
+		UserCreateReqDto request = new UserCreateReqDto("username", "password");
+		when(userRepository.existsByUsername("username")).thenReturn(false);
+		when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
 
-		User mockUser = new User("userName", "passWord");
+		User mockUser = User.builder()
+				.username(request.username())
+				.rawPassword(request.password())
+				.encodedPassword(passwordEncoder.encode(request.password()))
+				.build();
 		ReflectionTestUtils.setField(mockUser, "id", 1L);
 		when(userRepository.save(any(User.class))).thenReturn(mockUser);
+
 
 		// when
 		UserCreateResDto userCreateResDto = userService.createUser(request);
 
 		// then
 		assertThat(userCreateResDto).isNotNull();
-		assertThat(userCreateResDto.userName()).isEqualTo("userName");
-		verify(userRepository, times(1)).existsByUserName(request.userName());
+		assertThat(userCreateResDto.username()).isEqualTo("username");
+		verify(userRepository, times(1)).existsByUsername(request.username());
 		verify(userRepository, times(1)).save(any(User.class));
 	}
 
 	@Test
-	@DisplayName("사용자 생성 - 실패 : 이미 존재하는 userName")
-	void createUser_fail() {
+	@DisplayName("사용자 생성 - 실패 : 이미 사용중인 username")
+	void createUser_fail_alreadyExistsUsername() {
 		// given
-		UserCreateReqDto request = new UserCreateReqDto("userName", "passWord");
-		when(userRepository.existsByUserName(request.userName())).thenReturn(true);
+		UserCreateReqDto request = new UserCreateReqDto("username", "password");
+		when(userRepository.existsByUsername(request.username())).thenReturn(true);
+
+		// when & then
+		assertThatThrownBy(() -> userService.createUser(request))
+				.isInstanceOf(UserAlreadyExistsException.class)
+				.hasMessageContaining(request.username());
+		verify(userRepository, never()).save(any(User.class));
+	}
+
+	// 사용자 패스워드 요청에 사용
+	private static Stream<Arguments> provideInvalidUsernames() {
+		return Stream.of(
+				Arguments.of(""),          // 1. 빈 문자열 ""
+				Arguments.of(" "),         // 2. 공백 문자 " "
+				Arguments.of("a".repeat(31))    // 3. 31자 문자열
+		);
+	}
+
+	@ParameterizedTest
+	@DisplayName("사용자 생성 - 실패 : 유효하지 않은 사용자 이름")
+	@MethodSource("provideInvalidUsernames")
+	void createUser_fail_invalidUsername(String invalidUsername) {
+		// given
+		UserCreateReqDto request = new UserCreateReqDto(invalidUsername, "password");
+		when(userRepository.existsByUsername(request.username())).thenReturn(true);
 
 		// when
 		assertThatThrownBy(() -> userService.createUser(request))
 				.isInstanceOf(UserAlreadyExistsException.class)
-				.hasMessage(request.userName() + " Already Exists");
+				.hasMessageContaining(request.username());
 
 		// then
 		verify(userRepository, never()).save(any(User.class));
@@ -84,11 +122,13 @@ public class UserServiceTests {
 	@DisplayName("사용자 수정 - 성공")
 	void updateUser_success() {
 		// given
-		long userId = 1L;
-		UserUpdateReqDto request = new UserUpdateReqDto("newPassWord");
+		final Long userId = 1L;
+		UserUpdateReqDto request = new UserUpdateReqDto("newPassword");
+		when(passwordEncoder.encode(request.password())).thenReturn("encodedNewPassword");
 		User mockUser = User.builder()
-				.userName("userName")
-				.passWord("passWord")
+				.username("username")
+				.rawPassword(request.password())
+				.encodedPassword(request.password())
 				.build();
 		ReflectionTestUtils.setField(mockUser, "id", userId);
 		when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
@@ -98,24 +138,25 @@ public class UserServiceTests {
 
 		// then
 		assertThat(mockUser.getId()).isEqualTo(userUpdateResDto.id());
+		assertThat(mockUser.getPassword()).isEqualTo("encodedNewPassword");
 		verify(userRepository, times(1)).findById(userId);
-		verify(userRepository, never()).save(any(User.class));
+		verify(passwordEncoder, times(1)).encode(request.password());
 	}
 
 	@Test
 	@DisplayName("사용자 수정 - 실패 : 존재하지 않는 사용자")
 	void updateUser_fail_userNotFound() {
 		// given
-		long userId = 99L;
+		final Long userId = 999L;
 		UserUpdateReqDto request = new UserUpdateReqDto("newPassword");
-		// 사용자가 없음을 시뮬레이션
 		when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> userService.updateUser(userId, request))
 				.isInstanceOf(UserNotFoundException.class)
-				.hasMessage("User: {"+ userId + "} Not Found");
+				.hasMessageContaining(String.valueOf(userId));
 		verify(userRepository, times(1)).findById(userId);
+		verify(passwordEncoder, never()).encode(request.password());
 	}
 
 	// 사용자 패스워드 요청에 사용
@@ -133,12 +174,17 @@ public class UserServiceTests {
 	@MethodSource("provideInvalidPasswords")
 	void updateUser_fail_invalidPassword(String invalidPassword) {
 		// given
-		long userId = 1L;
+		final Long userId = 1L;
 		UserUpdateReqDto request = new UserUpdateReqDto(invalidPassword);
 
-		// 우선 사용자는 찾아야 하므로, findById는 정상적으로 동작하도록 설정
-		User mockUser = new User("userName", "passWord");
+		User mockUser = User.builder()
+				.username("username")
+				.rawPassword("password")
+				.encodedPassword("password")
+				.build();
+		ReflectionTestUtils.setField(mockUser, "id", userId);
 		when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+		when(passwordEncoder.encode(request.password())).thenReturn("encodedNewPassword");
 
 		// when & then
 		assertThatThrownBy(() -> userService.updateUser(userId, request))
@@ -149,17 +195,18 @@ public class UserServiceTests {
 	@DisplayName("사용자 상태 비활성화 => 활성화 - 성공")
 	void updateUserStatus_success() {
 		// given
-		long userId = 1L; // url로 제공
-		UserStatusUpdateReqDto request = new UserStatusUpdateReqDto("passWord", UserStatus.ACTIVE);
+		final Long userId = 1L;
+		UserStatusUpdateReqDto request = new UserStatusUpdateReqDto("password", UserStatus.ACTIVE);
 
-		// 비활성화된 가짜 유저
 		User mockUser = User.builder()
-				.userName("userName")
-				.passWord("passWord")
+				.username("username")
+				.rawPassword(request.password())
+				.encodedPassword(request.password())
 				.build();
 		ReflectionTestUtils.setField(mockUser, "id", userId);
 		mockUser.dormantUser();
 		when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+		when(passwordEncoder.matches(request.password(), mockUser.getPassword())).thenReturn(true);
 
 		// when
 		UserStatusUpdateResDto userStatusUpdateResDto = userService.updateUserStatus(userId, request);
@@ -174,69 +221,90 @@ public class UserServiceTests {
 	void updateUserStatus_ACTIVE_fail_userNotFound() {
 		// given
 		long userId = 1L; // url로 제공
-		UserStatusUpdateReqDto request = new UserStatusUpdateReqDto("passWord", UserStatus.ACTIVE);
-
-		// 비활성화된 가짜 유저
-		User mockUser = User.builder()
-				.userName("userName")
-				.passWord("passWord")
-				.build();
-		ReflectionTestUtils.setField(mockUser, "id", 99L);
-		mockUser.dormantUser();
+		UserStatusUpdateReqDto request = new UserStatusUpdateReqDto("password", UserStatus.ACTIVE);
 		when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> userService.updateUserStatus(userId, request))
 				.isInstanceOf(UserNotFoundException.class)
-				.hasMessage("User: {"+ userId + "} Not Found");
+				.hasMessageContaining(String.valueOf(userId));
 		verify(userRepository, times(1)).findById(userId);
+	}
+
+	@Test
+	@DisplayName("사용자 상태 비활성화 => 활성화 - 실패 : 비밀번호가 일치하지 않음")
+	void updateUserStatus_ACTIVE_fail_passwordIncollect() {
+		// given
+		long userId = 1L; // url로 제공
+		UserStatusUpdateReqDto request = new UserStatusUpdateReqDto("password", UserStatus.ACTIVE);
+
+		User mockUser = User.builder()
+				.username("username")
+				.rawPassword(request.password())
+				.encodedPassword(request.password())
+				.build();
+		ReflectionTestUtils.setField(mockUser, "id", userId);
+		when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+		when(passwordEncoder.matches(request.password(), mockUser.getPassword())).thenReturn(false);
+
+		// when & then
+		assertThatThrownBy(() -> userService.updateUserStatus(userId, request))
+				.isInstanceOf(InvalidInputException.class)
+				.hasMessage("Password not Equals");
 	}
 
 	@Test
 	@DisplayName("사용자 로그인 - 성공")
 	void loginUser_success() {
 		// given
-		UserLoginReqDto request = new UserLoginReqDto("userName", "passWord");
+		UserLoginReqDto request = new UserLoginReqDto("username", "password");
+		when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
 		User mockUser = User.builder()
-				.userName("userName")
-				.passWord("passWord")
+				.username("username")
+				.rawPassword("password")
+				.encodedPassword(passwordEncoder.encode(request.password()))
 				.build();
 		ReflectionTestUtils.setField(mockUser, "id", 1L);
-		when(userRepository.findByUserName(request.userName())).thenReturn(Optional.of(mockUser));
+		when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(mockUser));
+		when(passwordEncoder.matches(request.password(), mockUser.getPassword())).thenReturn(true);
+		when(jwtUtil.generateToken(mockUser)).thenReturn("Example Token");
 
 		// when
 		UserLoginResDto userLoginResDto = userService.loginUser(request);
 
 		// then
 		assertThat(userLoginResDto).isNotNull();
-		assertThat(userLoginResDto.userName()).isEqualTo("userName");
-		verify(userRepository, times(1)).findByUserName(request.userName());
+		assertThat(userLoginResDto.username()).isEqualTo("username");
+		assertThat(userLoginResDto.token()).isNotNull();
+		verify(userRepository, times(1)).findByUsername(request.username());
+		verify(jwtUtil, times(1)).generateToken(mockUser);
 	}
 
 	@Test
 	@DisplayName("사용자 로그인 - 실패 : 존재하지 않는 사용자")
 	void loginUser_fail_userNotFound() {
 		// given
-		UserLoginReqDto request = new UserLoginReqDto("userName", "passWord");
-		when(userRepository.findByUserName(request.userName())).thenReturn(Optional.empty());
+		UserLoginReqDto request = new UserLoginReqDto("username", "password");
+		when(userRepository.findByUsername(request.username())).thenReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> userService.loginUser(request))
 				.isInstanceOf(UserNotFoundException.class)
-				.hasMessage("User: {userName} Not Found");
+				.hasMessageContaining(request.username());
 	}
 
 	@Test
 	@DisplayName("사용자 로그인 - 실패 : 비밀번호 불일치")
 	void loginUser_fail_invalid_password() {
 		// given
-		UserLoginReqDto request = new UserLoginReqDto("userName", "passWord");
+		UserLoginReqDto request = new UserLoginReqDto("username", "password");
 		User mockUser = User.builder()
-				.userName("userName")
-				.passWord("diffPassWord")
+				.username("username")
+				.rawPassword("diffPassWord")
+				.encodedPassword("diffPassWord")
 				.build();
 		ReflectionTestUtils.setField(mockUser, "id", 1L);
-		when(userRepository.findByUserName(request.userName())).thenReturn(Optional.of(mockUser));
+		when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(mockUser));
 
 		// when & then
 		assertThatThrownBy(() -> userService.loginUser(request))

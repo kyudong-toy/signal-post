@@ -8,17 +8,20 @@ import dev.kyudong.back.user.api.dto.res.UserCreateResDto;
 import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
 import dev.kyudong.back.user.api.dto.res.UserStatusUpdateResDto;
 import dev.kyudong.back.user.api.dto.res.UserUpdateResDto;
+import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 
 /**
@@ -46,7 +49,7 @@ public interface UserApi {
 									"""
 									{
 										"id": 1,
-										"userName": "testUser"
+										"username": "testUser"
 									}
 									"""
 							)
@@ -70,7 +73,7 @@ public interface UserApi {
 					)
 			),
 	})
-	ResponseEntity<UserCreateResDto> createUser(@RequestBody UserCreateReqDto request);
+	ResponseEntity<UserCreateResDto> createUser(@RequestBody @Valid UserCreateReqDto request);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "사용자 로그인", description = "새로운 사용자를 생성합니다.")
@@ -82,7 +85,7 @@ public interface UserApi {
 									"""
 									{
 										"id": 1,
-										"userName": "testUser",
+										"username": "testUser",
 										"status": "ACTIVE"
 									}
 									"""
@@ -124,7 +127,7 @@ public interface UserApi {
 					)
 			),
 	})
-	ResponseEntity<UserLoginResDto> loginUser(@RequestBody UserLoginReqDto request);
+	ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "사용자 정보 수정", description = "사용자의 정보를 수정합니다.")
@@ -135,9 +138,9 @@ public interface UserApi {
 							examples = @ExampleObject(value =
 									"""
 									{
-										"id": 19,
-										"userName": "testUser",
-										"status": "ACTIVE"
+									  "id": 94,
+									  "username": "testUser",
+									  "token": "jwt토큰들어감"
 									}
 									"""
 							)
@@ -153,7 +156,7 @@ public interface UserApi {
 										"title": "User Not Found",
 										"status": 404,
 										"detail": "User: {1} Not Found",
-										"instance": "/api/v1/users/1",
+										"instance": "/api/v1/users/me",
 										"timestamp": "2025-08-16T05:06:40.722932200Z"
 									}
 									"""
@@ -161,7 +164,10 @@ public interface UserApi {
 					)
 			),
 	})
-	ResponseEntity<UserUpdateResDto> updateUser(@PathVariable long userId, @RequestBody UserUpdateReqDto request);
+	ResponseEntity<UserUpdateResDto> updateUser(
+			@RequestBody @Valid UserUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
+	);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "사용자 상태 수정", description = "사용자의 상태(status)를 수정합니다.")
@@ -231,6 +237,8 @@ public interface UserApi {
 					)
 			),
 	})
-	ResponseEntity<UserStatusUpdateResDto> updateUserStatus(@PathVariable long userId, @RequestBody UserStatusUpdateReqDto request);
+	ResponseEntity<UserStatusUpdateResDto> updateUserStatus(
+			@RequestBody @Valid UserStatusUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal);
 
 }

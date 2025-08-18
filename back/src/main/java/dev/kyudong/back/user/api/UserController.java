@@ -8,9 +8,12 @@ import dev.kyudong.back.user.api.dto.res.UserCreateResDto;
 import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
 import dev.kyudong.back.user.api.dto.res.UserStatusUpdateResDto;
 import dev.kyudong.back.user.api.dto.res.UserUpdateResDto;
+import dev.kyudong.back.user.security.CustomUserPrincipal;
 import dev.kyudong.back.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -25,7 +28,7 @@ public class UserController implements UserApi {
 
 	@Override
 	@PostMapping
-	public ResponseEntity<UserCreateResDto> createUser(@RequestBody UserCreateReqDto request) {
+	public ResponseEntity<UserCreateResDto> createUser(@RequestBody @Valid UserCreateReqDto request) {
 		UserCreateResDto userCreateResDto = userService.createUser(request);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
@@ -36,20 +39,24 @@ public class UserController implements UserApi {
 
 	@Override
 	@PostMapping("/login")
-	public ResponseEntity<UserLoginResDto> loginUser(@RequestBody UserLoginReqDto request) {
+	public ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request) {
 		return ResponseEntity.ok(userService.loginUser(request));
 	}
 
 	@Override
-	@PatchMapping("/{userId}")
-	public ResponseEntity<UserUpdateResDto> updateUser(@PathVariable long userId, @RequestBody UserUpdateReqDto request) {
-		return ResponseEntity.ok(userService.updateUser(userId, request));
+	@PatchMapping("/me/update")
+	public ResponseEntity<UserUpdateResDto> updateUser(
+			@RequestBody @Valid UserUpdateReqDto request,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+		return ResponseEntity.ok(userService.updateUser(userPrincipal.getId(), request));
 	}
 
 	@Override
-	@PatchMapping("/{userId}/status")
-	public ResponseEntity<UserStatusUpdateResDto> updateUserStatus(@PathVariable long userId, @RequestBody UserStatusUpdateReqDto request) {
-		return ResponseEntity.ok(userService.updateUserStatus(userId, request));
+	@PatchMapping("/me/status")
+	public ResponseEntity<UserStatusUpdateResDto> updateUserStatus(
+			@RequestBody @Valid UserStatusUpdateReqDto request,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+		return ResponseEntity.ok(userService.updateUserStatus(userPrincipal.getId(), request));
 	}
 
 }

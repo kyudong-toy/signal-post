@@ -4,13 +4,13 @@ import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.domain.UserStatus;
 
 public record UserUpdateResDto(
-		long id,
-		String userName,
+		Long id,
+		String username,
 		UserStatus status
 ) {
-	public static UserUpdateResDto form(User user) {
+	public static UserUpdateResDto from(User user) {
 		return new UserUpdateResDto(
-				user.getId(), user.getUserName(), user.getStatus()
+				user.getId(), user.getUsername(), user.getStatus()
 		);
 	}
 }

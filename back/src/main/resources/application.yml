@@ -53,3 +53,11 @@ logging:
     org.hibernate: INFO
     org.apache.tomcat: INFO
     dev.kyudong.back: DEBUG
+
+
+# ===================================================================
+# jwt Configuration
+# ===================================================================
+jwt:
+  secret: SGVsbG9AI2UzV3JvbGQhQCN9RHxkc2prZC0oOTBNeVNlY3JldCEyMyRGREcjMw==
+  expiration-time: 3600000
