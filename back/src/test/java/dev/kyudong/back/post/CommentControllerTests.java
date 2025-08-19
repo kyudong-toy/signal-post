@@ -1,7 +1,9 @@
 package dev.kyudong.back.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.common.config.SecurityConfig;
 import dev.kyudong.back.common.exception.InvalidAccessException;
+import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.api.CommentController;
 import dev.kyudong.back.post.api.dto.req.*;
 import dev.kyudong.back.post.api.dto.res.*;
@@ -11,12 +13,15 @@ import dev.kyudong.back.post.domain.Post;
 import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.post.service.CommentService;
+import dev.kyudong.back.security.WithMockCustomUser;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommentController.class)
+@Import(SecurityConfig.class)
 public class CommentControllerTests {
 
 	@Autowired
@@ -45,6 +51,14 @@ public class CommentControllerTests {
 	@SuppressWarnings("unused")
 	@MockitoBean
 	private CommentService commentService;
+
+	@SuppressWarnings("unused")
+	@MockitoBean
+	private JwtUtil jwtUtil;
+
+	@SuppressWarnings("unused")
+	@MockitoBean
+	private UserDetailsService userDetailsService;
 
 	private static User makeMockUser() {
 		User mockUser = User.builder()
@@ -69,10 +83,10 @@ public class CommentControllerTests {
 	private static Comment makeMockComment(Post mockPost, User mockUser) {
 		Comment mockComment = Comment.builder()
 				.content("Hello Java!")
+				.user(mockUser)
 				.build();
 		ReflectionTestUtils.setField(mockComment, "id", 1L);
 		ReflectionTestUtils.setField(mockComment, "post", mockPost);
-		ReflectionTestUtils.setField(mockComment, "user", mockUser);
 		ReflectionTestUtils.setField(mockComment, "createdAt", Instant.now());
 		ReflectionTestUtils.setField(mockComment, "modifiedAt", Instant.now());
 		return mockComment;
@@ -99,17 +113,18 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 작성 API - 성공")
+	@WithMockCustomUser
 	void createCommentApi_success() throws Exception {
 		// given
 		User mockUser = makeMockUser();
 		Post mockPost = makeMockPost(mockUser);
 		Long postId = mockPost.getId();
-		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), "Hello Comment");
+		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
 		CommentCreateResDto response = new CommentCreateResDto(
 				mockUser.getId(), mockPost.getId(), 1L, "Hello Comment", CommentStatus.NORMAL,
 				LocalDateTime.now(), LocalDateTime.now()
 		);
-		when(commentService.createComment(eq(postId), any(CommentCreateReqDto.class))).thenReturn(response);
+		when(commentService.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class))).thenReturn(response);
 
 		// when & then
 		mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)
@@ -124,13 +139,14 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 작성 API - 실패")
+	@WithMockCustomUser
 	void createCommentApi_fail() throws Exception {
 		// given
 		User mockUser = makeMockUser();
 		Post mockPost = makeMockPost(mockUser);
 		Long postId = mockPost.getId();
-		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), "Hello Comment");
-		when(commentService.createComment(eq(postId), any(CommentCreateReqDto.class)))
+		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
+		when(commentService.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class)))
 				.thenThrow(new PostNotFoundException(postId));
 
 		// when & then
@@ -146,6 +162,7 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 수정 API - 성공")
+	@WithMockCustomUser
 	void updateCommentApi_success() throws Exception {
 		// given
 		User mockUser = makeMockUser();
@@ -155,12 +172,12 @@ public class CommentControllerTests {
 		Long userId = mockUser.getId();
 		Long postId = mockPost.getId();
 		Long commentId = mockComment.getId();
-		CommentUpdateReqDto request = new CommentUpdateReqDto(userId, "Hello Comment");
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello Comment");
 		CommentUpdateResDto response = new CommentUpdateResDto(
 				mockUser.getId(), mockPost.getId(), 1L, "Hello Comment", CommentStatus.NORMAL,
 				LocalDateTime.now(), LocalDateTime.now()
 		);
-		when(commentService.updateComment(eq(postId), eq(commentId), any(CommentUpdateReqDto.class))).thenReturn(response);
+		when(commentService.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class))).thenReturn(response);
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}", postId, commentId)
@@ -175,6 +192,7 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 수정 API - 실패")
+	@WithMockCustomUser
 	void updateCommentApi_fail() throws Exception {
 		// given
 		User mockUser = makeMockUser();
@@ -183,8 +201,8 @@ public class CommentControllerTests {
 		Long userId = mockUser.getId();
 		Long postId = mockPost.getId();
 		Long commentId = 999L;
-		CommentUpdateReqDto request = new CommentUpdateReqDto(userId, "Hello");
-		when(commentService.updateComment(eq(postId), eq(commentId), any(CommentUpdateReqDto.class)))
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello");
+		when(commentService.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class)))
 				.thenThrow(new CommentNotFoundException(commentId));
 
 		// when & then
@@ -200,6 +218,7 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 상태 수정 API - 성공")
+	@WithMockCustomUser
 	void updateCommentStatusApi_success() throws Exception {
 		// given
 		User mockUser = makeMockUser();
@@ -209,9 +228,9 @@ public class CommentControllerTests {
 		Long userId = mockUser.getId();
 		Long postId = 1L;
 		Long commentId = mockComment.getId();
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(userId, CommentStatus.DELETED);
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 		CommentStatusUpdateResDto response = new CommentStatusUpdateResDto(postId, commentId, CommentStatus.DELETED);
-		when(commentService.updateCommentStatus(eq(postId), eq(commentId), any(CommentStatusUpdateReqDto.class))).thenReturn(response);
+		when(commentService.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class))).thenReturn(response);
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}/status", postId, commentId)
@@ -226,6 +245,7 @@ public class CommentControllerTests {
 
 	@Test
 	@DisplayName("댓글 상태 수정 API - 실패")
+	@WithMockCustomUser
 	void updateCommentStatusApi_fail() throws Exception {
 		// given
 		User mockUser = makeMockUser();
@@ -235,8 +255,8 @@ public class CommentControllerTests {
 		Long userId = mockUser.getId();
 		Long postId = 1L;
 		Long commentId = mockComment.getId();
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(userId, CommentStatus.NORMAL);
-		when(commentService.updateCommentStatus(eq(postId), eq(commentId), any(CommentStatusUpdateReqDto.class)))
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.NORMAL);
+		when(commentService.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class)))
 				.thenThrow(new InvalidAccessException("User {" + userId + "} has no permission to update Comment status " + commentId));
 
 		// when & then

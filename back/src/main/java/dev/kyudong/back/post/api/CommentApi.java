@@ -2,6 +2,7 @@ package dev.kyudong.back.post.api;
 
 import dev.kyudong.back.post.api.dto.req.*;
 import dev.kyudong.back.post.api.dto.res.*;
+import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -16,6 +17,7 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -132,7 +134,8 @@ public interface CommentApi {
 	ResponseEntity<CommentCreateResDto> createComment(
 			@Parameter(name = "postId", description = "댓글의 작성할 게시글 ID", required = true, example = "1")
 			@PathVariable @Positive Long postId,
-			@RequestBody @Valid CommentCreateReqDto request);
+			@RequestBody @Valid CommentCreateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "댓글 수정", description = "댓글을 수정합니다.")
@@ -212,7 +215,8 @@ public interface CommentApi {
 			@PathVariable @Positive Long postId,
 			@Parameter(name = "commentId", description = "수정할 댓글의 ID", required = true, example = "1")
 			@PathVariable @Positive Long commentId,
-			@RequestBody @Valid CommentUpdateReqDto request
+			@RequestBody @Valid CommentUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
 
 	@SuppressWarnings("unused")
@@ -289,7 +293,8 @@ public interface CommentApi {
 			@PathVariable @Positive Long postId,
 			@Parameter(name = "commentId", description = "수정할 댓글의 ID", required = true, example = "1")
 			@PathVariable @Positive Long commentId,
-			@RequestBody @Valid CommentStatusUpdateReqDto request
+			@RequestBody @Valid CommentStatusUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
 
 }

@@ -2,6 +2,7 @@ package dev.kyudong.back.post;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.api.dto.req.*;
 import dev.kyudong.back.post.api.dto.res.*;
 import dev.kyudong.back.post.domain.Comment;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -52,9 +54,12 @@ public class CommentIntegrationTests {
 	@Autowired
 	private CommentRepository commentRepository;
 
+	@Autowired
+	private JwtUtil jwtUtil;
+
 	private User createTestUser() {
 		User newUser = User.builder()
-				.username("testUser")
+				.username("mockUser")
 				.rawPassword("password")
 				.encodedPassword(passwordEncoder.encode("password"))
 				.build();
@@ -107,10 +112,11 @@ public class CommentIntegrationTests {
 		// given
 		User user = createTestUser();
 		Post post = createTestPost(user);
-		CommentCreateReqDto request = new CommentCreateReqDto(user.getId(), "Hello Comment");
+		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts/{postId}/comments", post.getId())
+										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 										.contentType(MediaType.APPLICATION_JSON.toString())
 										.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isCreated())
@@ -138,10 +144,11 @@ public class CommentIntegrationTests {
 		post.addComment(comment);
 		commentRepository.save(comment);
 
-		CommentUpdateReqDto request = new CommentUpdateReqDto(user.getId(), "Hello Comment");
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello Comment");
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}",post.getId(), comment.getId())
+										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 										.contentType(MediaType.APPLICATION_JSON.toString())
 										.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isOk())
@@ -169,10 +176,11 @@ public class CommentIntegrationTests {
 		post.addComment(comment);
 		Comment savedComment = commentRepository.save(comment);
 
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(user.getId(), CommentStatus.DELETED);
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}/status", post.getId(), savedComment.getId())
+											.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
 											.contentType(MediaType.APPLICATION_JSON.toString())
 											.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isOk())
