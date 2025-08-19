@@ -75,10 +75,10 @@ public class CommentServiceTests {
 	private static Comment makeMockComment(Post mockPost, User mockUser) {
 		Comment mockComment = Comment.builder()
 				.content("Hello Java!")
+				.user(mockUser)
 				.build();
 		ReflectionTestUtils.setField(mockComment, "id", 1L);
 		ReflectionTestUtils.setField(mockComment, "post", mockPost);
-		ReflectionTestUtils.setField(mockComment, "user", mockUser);
 		ReflectionTestUtils.setField(mockComment, "createdAt", Instant.now());
 		ReflectionTestUtils.setField(mockComment, "modifiedAt", Instant.now());
 		return mockComment;
@@ -97,13 +97,13 @@ public class CommentServiceTests {
 		when(postRepository.existsById(eq(mockPost.getId()))).thenReturn(true);
 		when(postRepository.getReferenceById(eq(postId))).thenReturn(mockPost);
 
-		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), "Hello Comment");
+		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
 		Comment mockComment = makeMockComment(mockPost, mockUser);
 		ReflectionTestUtils.setField(mockComment, "content", "Hello Comment");
 		when(commentRepository.save(any(Comment.class))).thenReturn(mockComment);
 
 		// when
-		CommentCreateResDto response = commentService.createComment(postId, request);
+		CommentCreateResDto response = commentService.createComment(postId, mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -140,10 +140,10 @@ public class CommentServiceTests {
 		Long postId = mockPost.getId();
 		when(postRepository.existsById(eq(mockPost.getId()))).thenReturn(true);
 		when(postRepository.getReferenceById(eq(postId))).thenReturn(mockPost);
-		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), invalidContent);
+		CommentCreateReqDto request = new CommentCreateReqDto(invalidContent);
 
 		// when & then
-		assertThatThrownBy(() -> commentService.createComment(mockPost.getId(), request))
+		assertThatThrownBy(() -> commentService.createComment(mockPost.getId(), mockUser.getId(), request))
 				.isInstanceOf(InvalidInputException.class)
 				.hasMessageContaining("Content");
 		verify(userRepository, times(1)).existsById(eq(mockUser.getId()));
@@ -158,10 +158,10 @@ public class CommentServiceTests {
 		User mockUser = makeMockUser();
 		Post mockPost = makeMockPost(mockUser);
 		when(postRepository.existsById(eq(mockPost.getId()))).thenReturn(false);
-		CommentCreateReqDto request = new CommentCreateReqDto(mockUser.getId(), "Hello");
+		CommentCreateReqDto request = new CommentCreateReqDto("Hello");
 
 		// when & then
-		assertThatThrownBy(() -> commentService.createComment(mockPost.getId(), request))
+		assertThatThrownBy(() -> commentService.createComment(mockPost.getId(), mockUser.getId(), request))
 				.isInstanceOf(PostNotFoundException.class)
 				.hasMessage("Post {" + mockPost.getId() + "} Not Found");
 		verify(postRepository, times(1)).existsById(eq(mockPost.getId()));
@@ -181,11 +181,10 @@ public class CommentServiceTests {
 		Long commentId = mockComment.getId();
 		when(commentRepository.findById(eq(commentId))).thenReturn(Optional.of(mockComment));
 
-		CommentUpdateReqDto request = new CommentUpdateReqDto(mockUser.getId(), "Hello Comment");
-
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello Comment");
 
 		// when
-		CommentUpdateResDto response = commentService.updateComment(postId, commentId, request);
+		CommentUpdateResDto response = commentService.updateComment(postId, commentId, mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -205,10 +204,10 @@ public class CommentServiceTests {
 		Long postId = mockPost.getId();
 		when(postRepository.existsById(eq(postId))).thenReturn(false);
 		Long commentId = 999L;
-		CommentUpdateReqDto request = new CommentUpdateReqDto(mockUser.getId(), "Hello Comment");
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello Comment");
 
 		// when & then
-		assertThatThrownBy(() -> commentService.updateComment(mockPost.getId(), commentId, request))
+		assertThatThrownBy(() -> commentService.updateComment(mockPost.getId(), commentId, mockUser.getId(), request))
 				.isInstanceOf(PostNotFoundException.class)
 				.hasMessage("Post {" + mockPost.getId() + "} Not Found");
 		verify(postRepository, times(1)).existsById(eq(mockPost.getId()));
@@ -225,11 +224,11 @@ public class CommentServiceTests {
 		when(postRepository.existsById(eq(postId))).thenReturn(true);
 
 		Long commentId = 999L;
-		CommentUpdateReqDto request = new CommentUpdateReqDto(mockUser.getId(), "Hello Comment");
+		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello Comment");
 		when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
 
 		// when & then
-		assertThatThrownBy(() -> commentService.updateComment(postId, commentId, request))
+		assertThatThrownBy(() -> commentService.updateComment(postId, commentId, mockUser.getId(), request))
 				.isInstanceOf(CommentNotFoundException.class)
 				.hasMessage("Comment {" + commentId + "} Not Found");
 		verify(postRepository, times(1)).existsById(eq(mockPost.getId()));
@@ -248,10 +247,10 @@ public class CommentServiceTests {
 		Long commentId = mockComment.getId();
 		when(commentRepository.findById(eq(commentId))).thenReturn(Optional.of(mockComment));
 
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(mockUser.getId(), CommentStatus.DELETED);
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 
 		// when
-		CommentStatusUpdateResDto response = commentService.updateCommentStatus(mockPost.getId(), commentId, request);
+		CommentStatusUpdateResDto response = commentService.updateCommentStatus(mockPost.getId(), commentId, mockUser.getId(), request);
 
 		// then
 		assertThat(response).isNotNull();
@@ -273,10 +272,10 @@ public class CommentServiceTests {
 		Long commentId = mockComment.getId();
 		when(commentRepository.findById(eq(commentId))).thenReturn(Optional.empty());
 
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(mockUser.getId(), CommentStatus.DELETED);
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 
 		// when & then
-		assertThatThrownBy(() -> commentService.updateCommentStatus(mockPost.getId(), commentId, request))
+		assertThatThrownBy(() -> commentService.updateCommentStatus(mockPost.getId(), commentId, mockUser.getId(), request))
 				.isInstanceOf(CommentNotFoundException.class)
 				.hasMessage("Comment {" + commentId + "} Not Found");
 		verify(postRepository, times(1)).existsById(eq(mockPost.getId()));
@@ -295,12 +294,12 @@ public class CommentServiceTests {
 		Long commentId = mockComment.getId();
 		when(commentRepository.findById(eq(commentId))).thenReturn(Optional.of(mockComment));
 
-		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(999L, CommentStatus.DELETED);
+		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 
 		// when & then
-		assertThatThrownBy(() -> commentService.updateCommentStatus(mockPost.getId(), commentId, request))
+		assertThatThrownBy(() -> commentService.updateCommentStatus(mockPost.getId(), commentId, 999L, request))
 				.isInstanceOf(InvalidAccessException.class)
-				.hasMessage("User {" + request.userId() + "} has no permission to update Comment status " + commentId);
+				.hasMessage("User {" + 999L + "} has no permission to update Comment status " + commentId);
 	}
 
 	@Test

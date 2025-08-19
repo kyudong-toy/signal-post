@@ -46,8 +46,8 @@ public class CommentService {
 
 
 	@Transactional
-	public CommentCreateResDto createComment(final Long postId, CommentCreateReqDto request) {
-		log.debug("댓글 생성 요청 시작: postId: {}, userId: {}", postId, request.userId());
+	public CommentCreateResDto createComment(final Long postId, final Long userId, CommentCreateReqDto request) {
+		log.debug("댓글 생성 요청 시작: postId: {}, userId: {}", postId, userId);
 
 		if (!postRepository.existsById(postId)) {
 			log.warn("댓글 생성 실패 - 존재하지 않는 게시글 : postId: {}", postId);
@@ -55,11 +55,11 @@ public class CommentService {
 		}
 		Post post = postRepository.getReferenceById(postId);
 
-		if (!userRepository.existsById(request.userId())) {
-			log.warn("사용자 조회 실패 - 존재하지 않는 사용자 : id: {}", request.userId());
-			throw new UserNotFoundException("User: {"+ request.userId() + "} Not Found");
+		if (!userRepository.existsById(userId)) {
+			log.warn("사용자 조회 실패 - 존재하지 않는 사용자 : id: {}", userId);
+			throw new UserNotFoundException(userId);
 		}
-		User user = userRepository.getReferenceById(request.userId());
+		User user = userRepository.getReferenceById(userId);
 
 		Comment newComment = Comment.builder()
 				.content(request.content())
@@ -68,13 +68,13 @@ public class CommentService {
 		post.addComment(newComment);
 		Comment savedComment = commentRepository.save(newComment);
 
-		log.info("댓글 생성 요청 성공: postId: {}, commentId: {}", postId, savedComment.getId());
+		log.info("댓글 생성 성공: postId: {}, commentId: {}", postId, savedComment.getId());
 		return CommentCreateResDto.from(savedComment);
 	}
 
 	@Transactional
-	public CommentUpdateResDto updateComment(final Long postId, final Long commentId, CommentUpdateReqDto request) {
-		log.debug("댓글 수정 요청 시작: userId: {}, commentId: {}", request.userId(), commentId);
+	public CommentUpdateResDto updateComment(final Long postId, final Long commentId, final Long userId, CommentUpdateReqDto request) {
+		log.debug("댓글 수정 요청 시작: userId: {}, commentId: {}", userId, commentId);
 
 		if (!postRepository.existsById(postId)) {
 			log.warn("댓글 수정 실패 - 존재하지 않는 게시글 : postId: {}", postId);
@@ -87,9 +87,9 @@ public class CommentService {
 					return new CommentNotFoundException(commentId);
 				});
 
-		if (!comment.getUser().getId().equals(request.userId())) {
-			log.warn("댓글 수정 실패 - 권한 없음 : userId: {}, postId: {}", request.userId(), postId);
-			throw new InvalidAccessException("User {" + request.userId() + "} has no permission to update Comment " + commentId);
+		if (!comment.getUser().getId().equals(userId)) {
+			log.warn("댓글 수정 실패 - 권한 없음 : userId: {}, postId: {}", userId, postId);
+			throw new InvalidAccessException("User {" + userId + "} has no permission to update Comment " + commentId);
 		}
 
 		if (StringUtils.hasText(request.content())) {
@@ -101,7 +101,7 @@ public class CommentService {
 	}
 
 	@Transactional
-	public CommentStatusUpdateResDto updateCommentStatus(final Long postId, final Long commentId, CommentStatusUpdateReqDto request) {
+	public CommentStatusUpdateResDto updateCommentStatus(final Long postId, final Long commentId, final Long userId, CommentStatusUpdateReqDto request) {
 		log.debug("댓글 상태 수정 요청 시작: postId: {}, commentId: {}", postId, commentId);
 
 		if (!postRepository.existsById(postId)) {
@@ -115,9 +115,9 @@ public class CommentService {
 					return new CommentNotFoundException(commentId);
 				});
 
-		if (!comment.getUser().getId().equals(request.userId())) {
-			log.warn("댓글 상태 수정 실패 - 권한 없음 : userId: {}, commentId: {}", request.userId(), commentId);
-			throw new InvalidAccessException("User {" + request.userId() + "} has no permission to update Comment status " + commentId);
+		if (!comment.getUser().getId().equals(userId)) {
+			log.warn("댓글 상태 수정 실패 - 권한 없음 : userId: {}, commentId: {}", userId, commentId);
+			throw new InvalidAccessException("User {" + userId + "} has no permission to update Comment status " + commentId);
 		}
 
 		switch (request.status()) {
@@ -125,11 +125,11 @@ public class CommentService {
 			case DELETED -> comment.delete();
 			default -> {
 				log.warn("응답할 수 없는 댓글 상태 요청 : postId: {}, status: {}", comment, request.status().name());
-				throw new InvalidInputException("PostStatus Cant not be update");
+				throw new InvalidInputException("CommentStatus Cant not be update");
 			}
 		}
 
-		log.info("댓글 상태 수정 요청 성공: userId: {}, postId: {}, status: {}", comment.getUser().getId(), comment.getId(), comment.getStatus().name());
+		log.info("댓글 상태 수정 성공: userId: {}, postId: {}, status: {}", userId, comment.getId(), comment.getStatus().name());
 		return CommentStatusUpdateResDto.from(comment);
 	}
 
