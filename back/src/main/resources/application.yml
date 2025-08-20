@@ -54,10 +54,16 @@ logging:
     org.apache.tomcat: INFO
     dev.kyudong.back: DEBUG
 
-
 # ===================================================================
 # jwt Configuration
 # ===================================================================
 jwt:
   secret: SGVsbG9AI2UzV3JvbGQhQCN9RHxkc2prZC0oOTBNeVNlY3JldCEyMyRGREcjMw==
   expiration-time: 3600000
+
+# ===================================================================
+# file Configuration
+# ===================================================================
+file:
+  upload-dir: D:/toy/uploads # 서버 상황에 맞춰 설정
+  public-web-path: /media/
