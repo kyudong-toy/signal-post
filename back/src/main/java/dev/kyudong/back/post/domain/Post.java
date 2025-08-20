@@ -16,7 +16,7 @@ import java.util.List;
 @Entity
 @Getter
 @ToString(exclude = {"user"})
-@Table(name = "POST")
+@Table(name = "POSTS")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {

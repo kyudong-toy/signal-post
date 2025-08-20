@@ -9,7 +9,7 @@ import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.service.FileService;
-import dev.kyudong.back.post.api.dto.event.PostCreatedEvent;
+import dev.kyudong.back.post.api.dto.event.PostCreateEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -30,8 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -161,34 +160,26 @@ public class FileServiceTests {
 	@DisplayName("게시글 생성 후 파일 이벤트 - 성공")
 	void handlePostCreateEvent_success() {
 		// given
-		User mockUser = makeMockUser();
-		given(userRepository.existsById(mockUser.getId())).willReturn(true);
-		given(userRepository.getReferenceById(mockUser.getId())).willReturn(mockUser);
-
-		File mockFile1 = File.builder()
-				.uploader(mockUser)
-				.build();
-		ReflectionTestUtils.setField(mockFile1, "id", 1L);
-		given(fileRepository.findByIdAndUploader(mockFile1.getId(), mockUser)).willReturn(Optional.of(mockFile1));
-		File mockFile2 = File.builder()
-				.uploader(mockUser)
-				.build();
-		ReflectionTestUtils.setField(mockFile2, "id", 2L);
-		given(fileRepository.findByIdAndUploader(mockFile2.getId(), mockUser)).willReturn(Optional.of(mockFile2));
-
-		PostCreatedEvent request = new PostCreatedEvent(1L, 1L, List.of(1L, 2L));
+		PostCreateEvent request = new PostCreateEvent(1L, Set.of(1L, 2L));
 
 		// when
-		fileService.handlePostCreatedEvent(request);
+		fileService.handlePostCreateEvent(request);
 
 		// then
-		assertThat(mockFile1.getStatus()).isEqualTo(FileStatus.ACTIVE);
-		assertThat(mockFile1.getOwnerId()).isEqualTo(request.postId());
-		assertThat(mockFile1.getFileOwnerType()).isEqualTo(FileOwnerType.POST);
-		assertThat(mockFile2.getStatus()).isEqualTo(FileStatus.ACTIVE);
-		assertThat(mockFile2.getOwnerId()).isEqualTo(request.postId());
-		assertThat(mockFile2.getFileOwnerType()).isEqualTo(FileOwnerType.POST);
-		then(fileRepository).should(times(2)).findByIdAndUploader(anyLong(), any(User.class));
+		ArgumentCaptor<Set<Long>> fileIdsCaptor = ArgumentCaptor.forClass(Set.class);
+		ArgumentCaptor<Long> postIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<FileOwnerType> ownerTypeCaptor = ArgumentCaptor.forClass(FileOwnerType.class);
+
+		then(fileRepository).should(times(1)).confirmFileByIds(
+				fileIdsCaptor.capture(),
+				postIdCaptor.capture(),
+				ownerTypeCaptor.capture()
+		);
+
+		assertThat(fileIdsCaptor.getValue()).isEqualTo(Set.of(1L, 2L));
+		assertThat(postIdCaptor.getValue()).isEqualTo(1L);
+		assertThat(ownerTypeCaptor.getValue()).isEqualTo(FileOwnerType.POST);
+		then(fileRepository).should().confirmFileByIds(anySet(), anyLong(), any(FileOwnerType.class));
 	}
 
 	@Test
@@ -204,10 +195,10 @@ public class FileServiceTests {
 				.build();
 		ReflectionTestUtils.setField(mockFile1, "id", 999L);
 
-		PostCreatedEvent request = new PostCreatedEvent(1L, 1L, List.of(1L, 2L));
+		PostCreateEvent request = new PostCreateEvent(1L, Set.of(1L, 2L));
 
 		// when && then
-		assertThatThrownBy(() -> fileService.handlePostCreatedEvent(request))
+		assertThatThrownBy(() -> fileService.handlePostCreateEvent(request))
 				.isInstanceOf(FileMetadataNotFoundException.class)
 				.hasMessageContaining(String.valueOf(1L));
 	}

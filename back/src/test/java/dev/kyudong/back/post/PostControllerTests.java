@@ -28,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -99,7 +100,7 @@ public class PostControllerTests {
 	void createPostApi_success() throws Exception {
 		// given
 		final Long postId = 1L;
-		PostCreateReqDto request = new PostCreateReqDto("Test", "Hello World!");
+		PostCreateReqDto request = new PostCreateReqDto("Test", "Hello World!", new HashSet<>());
 		PostCreateResDto response = new PostCreateResDto(postId, "Test", "Hello World!", LocalDateTime.now(), LocalDateTime.now());
 		when(postService.createPost(eq(postId), any(PostCreateReqDto.class))).thenReturn(response);
 
@@ -120,7 +121,7 @@ public class PostControllerTests {
 	void createPostApi_fail() throws Exception {
 		// given
 		final Long userId = 999L;
-		PostCreateReqDto request = new PostCreateReqDto("Test", "Hello World!");
+		PostCreateReqDto request = new PostCreateReqDto("Test", "Hello World!", new HashSet<>());
 		when(postService.createPost(eq(userId), any(PostCreateReqDto.class)))
 				.thenThrow(new UserNotFoundException(userId));
 
@@ -141,7 +142,7 @@ public class PostControllerTests {
 	void updatePostApi_success() throws Exception {
 		// given
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello World!");
+		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello World!", new HashSet<>(), new HashSet<>());
 		PostUpdateResDto response = new PostUpdateResDto(postId, "Test", "Hello World!", LocalDateTime.now(), LocalDateTime.now());
 		when(postService.updatePost(eq(postId), eq(1L), any(PostUpdateReqDto.class))).thenReturn(response);
 
@@ -162,7 +163,7 @@ public class PostControllerTests {
 	void updatePostApi_fail() throws Exception {
 		// given
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto( "Test", "Hello World!");
+		PostUpdateReqDto request = new PostUpdateReqDto( "Test", "Hello World!", new HashSet<>(), new HashSet<>());
 		when(postService.updatePost(eq(postId), eq(1L), any(PostUpdateReqDto.class)))
 				.thenThrow(new InvalidAccessException("User {" + 1L + "} has no permission to update post " + postId));
 
