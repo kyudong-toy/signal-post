@@ -1,5 +1,7 @@
 package dev.kyudong.back.common.exception;
 
+import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
+import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
@@ -69,6 +71,26 @@ public class GlobalExceptionHandler {
 	protected ResponseEntity<ProblemDetail> handleCommentNotFoundException(CommentNotFoundException e) {
 		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 		problemDetail.setTitle("Comment Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(InvalidFileException.class)
+	protected ResponseEntity<ProblemDetail> handleCommentNotFoundException(InvalidFileException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+		problemDetail.setTitle("Invalid Request File");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
+	@ExceptionHandler(FileMetadataNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleCommentNotFoundException(FileMetadataNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("File Metadata Not Found");
 		problemDetail.setStatus(HttpStatus.NOT_FOUND);
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
