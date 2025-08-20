@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,7 +92,7 @@ public class PostIntegrationTests {
 	void createPost() throws Exception {
 		// given
 		User user = createTestUser();
-		PostCreateReqDto request = new PostCreateReqDto( "Test", "Hello Post!");
+		PostCreateReqDto request = new PostCreateReqDto( "Test", "Hello Post!", new HashSet<>());
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts")
@@ -130,7 +131,7 @@ public class PostIntegrationTests {
 				.build();
 		user.addPost(post);
 		Post savedPost = postRepository.save(post);
-		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello Java!");
+		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello Java!", new HashSet<>(), new HashSet<>());
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/update", savedPost.getId())

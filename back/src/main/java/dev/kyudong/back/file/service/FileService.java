@@ -3,13 +3,13 @@ package dev.kyudong.back.file.service;
 import dev.kyudong.back.file.api.dto.res.FileUploadResDto;
 import dev.kyudong.back.file.domain.File;
 import dev.kyudong.back.file.domain.FileOwnerType;
-import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
 import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.utils.FileValidationUtils;
-import dev.kyudong.back.post.api.dto.event.PostCreatedEvent;
+import dev.kyudong.back.post.api.dto.event.PostCreateEvent;
+import dev.kyudong.back.post.api.dto.event.PostUpdateEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -23,6 +23,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -92,32 +94,36 @@ public class FileService {
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-	public void handlePostCreatedEvent(PostCreatedEvent event) {
-		log.info("게시글 생성 이벤트 수신완료: userId={}, postId={}", event.userId(), event.postId());
+	public void handlePostCreateEvent(PostCreateEvent event) {
+		final Long postId = event.postId();
+		log.info("게시글 생성 이벤트 수신완료: postId={}", postId);
 
-		if (event.fileIds().isEmpty()) {
-			log.debug("게시글({})에 첨부파일이 없어 생략합니다.", event.postId());
-			return;
+		// 파일들을 활성화 상태로 변경한다.
+		Set<Long> fileIds = event.fileIds();
+		if (!fileIds.isEmpty()) {
+			log.debug("게시글({})에 파일을 추가합니다: fileIds:{}", postId, fileIds);
+			fileRepository.confirmFileByIds(fileIds, postId, FileOwnerType.POST);
+		}
+	}
+
+	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+	public void handlePostUpdateEvent(PostUpdateEvent event) {
+		final Long postId = event.postId();
+		log.info("게시글 수정 이벤트 수신완료: postId={}", postId);
+
+		// 사용하지 않는 파일들을 삭제 처리
+		Set<Long> delIds = event.delFileIds();
+		if (!delIds.isEmpty()) {
+			log.debug("게시글(postId={})에 사용하지 않는 파일을 삭제합니다: delFileIds:{}", postId, delIds);
+			fileRepository.softDeleteByIds(delIds, Instant.now());
 		}
 
-		Long uploaderId = event.userId();
-		if (!userRepository.existsById(uploaderId)) {
-			log.warn("사용자 조회에 실패했습니다: uploaderId={}", uploaderId);
-			throw new UserNotFoundException(uploaderId);
+		// 파일들을 활성화 상태로 변경한다.
+		Set<Long> fileIds = event.fileIds();
+		if (!fileIds.isEmpty()) {
+			log.debug("게시글({})에 파일을 추가합니다: fileIds:{}", postId, fileIds);
+			fileRepository.confirmFileByIds(fileIds, postId, FileOwnerType.POST);
 		}
-		User uploader = userRepository.getReferenceById(uploaderId);
-
-		for (Long fileId : event.fileIds()) {
-			File file = fileRepository.findByIdAndUploader(fileId, uploader)
-					.orElseThrow(() -> {
-						log.error("파일 정보 불일치로 파일 상태 업데이트가 취소됩니다: event={}", event);
-						return new FileMetadataNotFoundException(fileId);
-					});
-			file.activeFile();
-			file.updateOwnerId(event.postId());
-			file.updateFileOwnerType(FileOwnerType.POST);
-		}
-
 	}
 
 }

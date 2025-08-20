@@ -25,8 +25,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -43,6 +45,10 @@ public class PostServiceTests {
 
 	@Mock
 	private UserRepository userRepository;
+
+	@SuppressWarnings("unused")
+	@Mock
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@InjectMocks
 	private PostService postService;
@@ -85,7 +91,7 @@ public class PostServiceTests {
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 
-		PostCreateReqDto request = new PostCreateReqDto("subject", "content");
+		PostCreateReqDto request = new PostCreateReqDto("subject", "content", new HashSet<>());
 		Post mockPost = makeMockPost(mockUser);
 		when(postRepository.save(any(Post.class))).thenReturn(mockPost);
 
@@ -123,7 +129,7 @@ public class PostServiceTests {
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 
-		PostCreateReqDto request = new PostCreateReqDto(invalidSubject, "content");
+		PostCreateReqDto request = new PostCreateReqDto(invalidSubject, "content", new HashSet<>());
 
 		// when & then
 		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
@@ -149,7 +155,7 @@ public class PostServiceTests {
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 
-		PostCreateReqDto request = new PostCreateReqDto("subject", invalidContent);
+		PostCreateReqDto request = new PostCreateReqDto("subject", invalidContent, new HashSet<>());
 
 		// when & then
 		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
@@ -164,7 +170,7 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
@@ -184,7 +190,7 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.empty());
 
 		// when & then
@@ -200,7 +206,7 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
