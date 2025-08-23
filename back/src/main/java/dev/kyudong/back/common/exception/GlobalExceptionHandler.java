@@ -3,6 +3,7 @@ package dev.kyudong.back.common.exception;
 import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
 import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.follow.exception.AlreadyFollowException;
+import dev.kyudong.back.follow.exception.FollowingException;
 import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
@@ -107,5 +108,16 @@ public class GlobalExceptionHandler {
 		problemDetail.setProperty("timestamp", Instant.now());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
 	}
+
+	@ExceptionHandler(FollowingException.class)
+	protected ResponseEntity<ProblemDetail> handleFollowingException(FollowingException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+		problemDetail.setTitle("Following Exception");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
 
 }

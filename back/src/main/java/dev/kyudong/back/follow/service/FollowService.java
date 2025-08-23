@@ -125,20 +125,20 @@ public class FollowService {
 		}
 	}
 
-	private Follow findActiveFollowOrThrow(final Long followerUserId, final String followingUsername, final FollowStatus status) {
-		User follower = userRepository.getReferenceById(followerUserId);
-		User following = userRepository.findByUsername(followingUsername)
+	private Follow findActiveFollowOrThrow(final Long followingUserId, final String followerUsername, final FollowStatus status) {
+		User follower = userRepository.findByUsername(followerUsername)
 				.orElseThrow(() -> {
-					log.warn("팔로잉할 사용자가 조회되지 않았습니다: followingUsername={}", followingUsername);
-					return new UserNotFoundException(followingUsername);
+					log.warn("팔로잉할 사용자가 조회되지 않았습니다: followingUsername={}", followerUsername);
+					return new UserNotFoundException(followerUsername);
 				});
+		User following = userRepository.getReferenceById(followingUserId);
 
 		Follow follow = followRepository.findByFollowerAndFollowingAndStatus(follower, following, status)
 				.orElseThrow(() -> {
-					log.warn("팔로잉 요청이 되어있지 않는 유저입니다: followerUserId={}, followingUserId={}", followerUserId, following.getId());
+					log.warn("팔로잉 요청이 되어있지 않는 유저입니다: followerUserId={}, followingUserId={}", followingUserId, following.getId());
 					return new FollowingException("팔로잉 요청이 되어있지 않는 유저입니다");
 				});
-		validateNotSelfFollow(followerUserId, following.getId());
+		validateNotSelfFollow(followingUserId, follower.getId());
 
 		return follow;
 	}
