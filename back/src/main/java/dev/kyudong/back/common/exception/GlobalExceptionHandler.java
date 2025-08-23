@@ -4,6 +4,8 @@ import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
 import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.follow.exception.AlreadyFollowException;
 import dev.kyudong.back.follow.exception.FollowingException;
+import dev.kyudong.back.interaction.exception.InteractionNotFoundException;
+import dev.kyudong.back.interaction.exception.InteractionTargetNotFoundException;
 import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
@@ -119,5 +121,24 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
 	}
 
+	@ExceptionHandler(InteractionTargetNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleTargetNotFoundException(InteractionTargetNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+		problemDetail.setTitle("Interaction Target Not Found");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
+	@ExceptionHandler(InteractionNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleTargetNotFoundException(InteractionNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Interaction Not Found");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
 
 }
