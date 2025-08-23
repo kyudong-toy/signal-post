@@ -8,8 +8,8 @@ import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.utils.FileValidationUtils;
-import dev.kyudong.back.post.api.dto.event.PostCreateEvent;
-import dev.kyudong.back.post.api.dto.event.PostUpdateEvent;
+import dev.kyudong.back.post.api.dto.event.PostCreateFileEvent;
+import dev.kyudong.back.post.api.dto.event.PostUpdateFileEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -94,7 +94,7 @@ public class FileService {
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-	public void handlePostCreateEvent(PostCreateEvent event) {
+	public void handlePostCreateEvent(PostCreateFileEvent event) {
 		final Long postId = event.postId();
 		log.info("게시글 생성 이벤트 수신완료: postId={}", postId);
 
@@ -107,7 +107,7 @@ public class FileService {
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-	public void handlePostUpdateEvent(PostUpdateEvent event) {
+	public void handlePostUpdateEvent(PostUpdateFileEvent event) {
 		final Long postId = event.postId();
 		log.info("게시글 수정 이벤트 수신완료: postId={}", postId);
 

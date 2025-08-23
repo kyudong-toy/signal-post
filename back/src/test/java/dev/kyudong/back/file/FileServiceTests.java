@@ -9,7 +9,7 @@ import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.service.FileService;
-import dev.kyudong.back.post.api.dto.event.PostCreateEvent;
+import dev.kyudong.back.post.api.dto.event.PostCreateFileEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -160,7 +160,7 @@ public class FileServiceTests {
 	@DisplayName("게시글 생성 후 파일 이벤트 - 성공")
 	void handlePostCreateEvent_success() {
 		// given
-		PostCreateEvent request = new PostCreateEvent(1L, Set.of(1L, 2L));
+		PostCreateFileEvent request = new PostCreateFileEvent(1L, Set.of(1L, 2L));
 
 		// when
 		fileService.handlePostCreateEvent(request);
@@ -195,7 +195,7 @@ public class FileServiceTests {
 				.build();
 		ReflectionTestUtils.setField(mockFile1, "id", 999L);
 
-		PostCreateEvent request = new PostCreateEvent(1L, Set.of(1L, 2L));
+		PostCreateFileEvent request = new PostCreateFileEvent(1L, Set.of(1L, 2L));
 
 		// when && then
 		assertThatThrownBy(() -> fileService.handlePostCreateEvent(request))
