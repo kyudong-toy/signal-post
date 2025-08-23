@@ -2,9 +2,8 @@ package dev.kyudong.back.post.api.dto.event;
 
 import java.util.Set;
 
-public record PostUpdateEvent(
+public record PostCreateFileEvent(
 		Long postId,
-		Set<Long> fileIds,
-		Set<Long> delFileIds
+		Set<Long> fileIds
 ) {
 }
