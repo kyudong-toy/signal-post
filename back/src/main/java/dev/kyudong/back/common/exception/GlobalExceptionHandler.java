@@ -6,6 +6,7 @@ import dev.kyudong.back.follow.exception.AlreadyFollowException;
 import dev.kyudong.back.follow.exception.FollowingException;
 import dev.kyudong.back.interaction.exception.InteractionNotFoundException;
 import dev.kyudong.back.interaction.exception.InteractionTargetNotFoundException;
+import dev.kyudong.back.notification.exception.NotificationNotFoundException;
 import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
@@ -135,6 +136,16 @@ public class GlobalExceptionHandler {
 	protected ResponseEntity<ProblemDetail> handleTargetNotFoundException(InteractionNotFoundException e) {
 		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 		problemDetail.setTitle("Interaction Not Found");
+		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
+	@ExceptionHandler(NotificationNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleNotificationNotFoundException(NotificationNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Notification Not Found");
 		problemDetail.setStatus(HttpStatus.BAD_REQUEST);
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
