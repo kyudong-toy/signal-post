@@ -4,6 +4,7 @@ import dev.kyudong.back.common.exception.InvalidAccessException;
 import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.api.dto.event.PostCreateFeedEvent;
 import dev.kyudong.back.post.api.dto.event.PostCreateFileEvent;
+import dev.kyudong.back.post.api.dto.event.PostCreateNotification;
 import dev.kyudong.back.post.api.dto.event.PostUpdateFileEvent;
 import dev.kyudong.back.post.api.dto.req.PostCreateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostStatusUpdateReqDto;
@@ -75,6 +76,10 @@ public class PostService {
 		// feed 추가
 		PostCreateFeedEvent feedEvent = new PostCreateFeedEvent(savedPost, user);
 		applicationEventPublisher.publishEvent(feedEvent);
+
+		// 알림 이벤트 추가
+		PostCreateNotification notificationEvent = new PostCreateNotification(postId, userId);
+		applicationEventPublisher.publishEvent(notificationEvent);
 
 		log.info("게시글 생성에 성공했습니다: userId={}, postId={}", userId, postId);
 		return PostCreateResDto.from(savedPost);
