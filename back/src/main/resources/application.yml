@@ -38,7 +38,8 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha # 태그(Controller) 정렬 순서: 알파벳순
-    operations-sorter: alpha # API(Operation) 정렬 순서: 알파벳순
+    operations-sorter: method # API(Operation) 정렬 순서: 알파벳순
+    display-request-duration: true # 요청시간 표시
   # 기본 요청/응답 미디어 타입 설정
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
