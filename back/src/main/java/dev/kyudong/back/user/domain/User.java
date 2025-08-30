@@ -107,4 +107,20 @@ public class User {
 		post.associateUser(this);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		User user = (User) o;
+
+		if (!Objects.equals(id, user.id)) return false;
+		return Objects.equals(username, user.username);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(username);
+	}
+
 }

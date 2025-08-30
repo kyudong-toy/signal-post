@@ -65,7 +65,7 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 
 		savedNotifications.forEach(notification -> {
 			NotificationDetailResDto notificationDetailResDto = NotificationDetailResDto.from(notification);
-			notificationWebSocketHandler.sendMessageToUser(notificationDetailResDto.receiverId(), notificationDetailResDto);
+			notificationWebSocketHandler.sendNotificationToUser(notificationDetailResDto.receiverId(), notificationDetailResDto);
 		});
 	}
 

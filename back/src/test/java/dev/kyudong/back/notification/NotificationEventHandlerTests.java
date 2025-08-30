@@ -116,7 +116,7 @@ public class NotificationEventHandlerTests {
 		then(followRepository).should().findByFollowingWithFollower(mockFollowing);
 		then(notificationRepository).should().saveAll(anyList());
 		then(notificationWebSocketHandler).should(times(mockFollows.size()))
-				.sendMessageToUser(anyLong(), any(NotificationDetailResDto.class));
+				.sendNotificationToUser(anyLong(), any(NotificationDetailResDto.class));
 	}
 
 }

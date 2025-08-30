@@ -1,5 +1,9 @@
 package dev.kyudong.back.common.exception;
 
+import dev.kyudong.back.chat.exception.ChatMessageNotFoundException;
+import dev.kyudong.back.chat.exception.ChatMemberExistsException;
+import dev.kyudong.back.chat.exception.ChatMemberNotFoundException;
+import dev.kyudong.back.chat.exception.ChatRoomNotFoundException;
 import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
 import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.follow.exception.AlreadyFollowException;
@@ -11,6 +15,7 @@ import dev.kyudong.back.post.exception.CommentNotFoundException;
 import dev.kyudong.back.post.exception.PostNotFoundException;
 import dev.kyudong.back.user.exception.UserAlreadyExistsException;
 import dev.kyudong.back.user.exception.UserNotFoundException;
+import dev.kyudong.back.user.exception.UsersNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -150,6 +155,56 @@ public class GlobalExceptionHandler {
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+	}
+
+	@ExceptionHandler(UsersNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleUsersNotFoundException(UsersNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Users Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(ChatMessageNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleChatMessageNotFoundException(ChatMessageNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Chat Message Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(ChatMemberExistsException.class)
+	protected ResponseEntity<ProblemDetail> handleChatMemberExistsException(ChatMemberExistsException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Chat Member Not Exists");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(ChatRoomNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleChatRoomNotFoundException(ChatRoomNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Chat Room Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(ChatMemberNotFoundException.class)
+	protected ResponseEntity<ProblemDetail> handleChatMemberNotFoundException(ChatMemberNotFoundException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+		problemDetail.setTitle("Chat Member Not Found");
+		problemDetail.setStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setDetail(e.getMessage());
+		problemDetail.setProperty("timestamp", Instant.now());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
 	}
 
 }
