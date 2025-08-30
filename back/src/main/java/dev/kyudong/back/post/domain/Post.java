@@ -34,7 +34,7 @@ public class Post {
 	private String subject;
 
 	@Lob
-	@Column(name = "CONTENT", nullable = false)
+	@Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
 	private String content;
 
 	@CreatedDate

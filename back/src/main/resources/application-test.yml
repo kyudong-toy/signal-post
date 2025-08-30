@@ -1,0 +1,40 @@
+# ===================================================================
+# Spring Boot Core Configuration
+# ===================================================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb-${random.uuid};MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+    open-in-view: false
+
+# ===================================================================
+# log Configuration
+# ===================================================================
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate: WARN
+    dev.kyudong.back: DEBUG
+
+# ===================================================================
+# jwt Configuration
+# ===================================================================
+jwt:
+  secret: SGVsbG9AI2UzV3JvbGQhQCN9RHxkc2prZC0oOTBNeVNlY3JldCEyMyRGREcjMw==
+  expiration-time: 3600000
+
+# ===================================================================
+# file Configuration
+# ===================================================================
+file:
+  upload-dir: /test/uploads
+  public-web-path: /media/

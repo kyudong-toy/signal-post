@@ -33,7 +33,7 @@ public class Comment {
 	private User user;
 
 	@Lob
-	@Column(name = "CONTENT", nullable = false)
+	@Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
 	private String content;
 
 	@CreatedDate
