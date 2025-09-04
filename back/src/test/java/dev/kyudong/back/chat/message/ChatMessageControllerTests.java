@@ -71,6 +71,8 @@ public class ChatMessageControllerTests {
 						new ChatMessageDetailResDto(
 								1L, 
 								1L,
+								1L,
+								"djfdkfd",
 								"안녕",
 								MessageType.TEXT,
 								MessageStatus.ACTIVE,
@@ -78,7 +80,9 @@ public class ChatMessageControllerTests {
 						),
 						new ChatMessageDetailResDto(
 								2L,
+								1L,
 								2L,
+								"cvxcaaz",
 								"그래 안녕",
 								MessageType.TEXT,
 								MessageStatus.ACTIVE,
@@ -87,6 +91,8 @@ public class ChatMessageControllerTests {
 						new ChatMessageDetailResDto(
 								3L,
 								1L,
+								1L,
+								"djfdkfd",
 								"뭘봐",
 								MessageType.TEXT,
 								MessageStatus.ACTIVE,

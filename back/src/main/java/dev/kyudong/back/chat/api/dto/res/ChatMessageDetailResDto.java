@@ -9,7 +9,9 @@ import java.time.ZoneOffset;
 
 public record ChatMessageDetailResDto(
 		Long messageId,
+		Long roomId,
 		Long senderId,
+		String senderUsername,
 		String content,
 		MessageType messageType,
 		MessageStatus messageStatus,
@@ -18,7 +20,9 @@ public record ChatMessageDetailResDto(
 	public static ChatMessageDetailResDto from(ChatMessage chatMessage) {
 		return new ChatMessageDetailResDto(
 				chatMessage.getId(),
+				chatMessage.getChatRoom().getId(),
 				chatMessage.getSender().getUser().getId(),
+				chatMessage.getSender().getUser().getUsername(),
 				chatMessage.getContent(),
 				chatMessage.getMessageType(),
 				chatMessage.getMessageStatus(),

@@ -58,6 +58,8 @@ logging:
     org.hibernate: WARN
     org.apache.tomcat: WARN
     dev.kyudong.back: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
 
 # ===================================================================
 # jwt Configuration
