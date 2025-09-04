@@ -4,6 +4,8 @@ import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -33,8 +35,8 @@ public class Post {
 	@Column(name = "SUBJECT", length = 100, nullable = false)
 	private String subject;
 
-	@Lob
-	@Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "CONTENT", nullable = false, columnDefinition = "jsonb")
 	private String content;
 
 	@CreatedDate

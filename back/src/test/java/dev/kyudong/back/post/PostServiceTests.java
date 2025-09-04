@@ -5,6 +5,8 @@ import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.api.dto.req.PostCreateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostUpdateReqDto;
+import dev.kyudong.back.post.api.dto.req.vo.EditorBlockVO;
+import dev.kyudong.back.post.api.dto.req.vo.EditorContentVO;
 import dev.kyudong.back.post.api.dto.res.PostCreateResDto;
 import dev.kyudong.back.post.api.dto.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.api.dto.res.PostDetailResDto;
@@ -29,6 +31,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -66,11 +69,15 @@ public class PostServiceTests {
 	private static Post makeMockPost(User mockUser) {
 		Post mockPost = Post.builder()
 				.subject("subject")
-				.content("content")
+				.content(createTestContent())
 				.build();
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
+	}
+
+	private static String createTestContent() {
+		return "{\"time\": 1756713679939, \"blocks\": [{\"id\": \"test-block\", \"data\": {\"text\": \"테스트!\"}, \"type\": \"paragraph\"}], \"version\": \"2.31.0\"}";
 	}
 
 	private static Post makeMockPost(Long postId, User mockUser) {
@@ -91,7 +98,8 @@ public class PostServiceTests {
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 
-		PostCreateReqDto request = new PostCreateReqDto("subject", "content", new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "테스트")), "1.0");
+		PostCreateReqDto request = new PostCreateReqDto("subject", content, new HashSet<>());
 		Post mockPost = makeMockPost(mockUser);
 		when(postRepository.save(any(Post.class))).thenReturn(mockPost);
 
@@ -129,7 +137,8 @@ public class PostServiceTests {
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 
-		PostCreateReqDto request = new PostCreateReqDto(invalidSubject, "content", new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "테스트")), "1.0");
+		PostCreateReqDto request = new PostCreateReqDto(invalidSubject, content, new HashSet<>());
 
 		// when & then
 		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
@@ -155,7 +164,8 @@ public class PostServiceTests {
 		when(userRepository.getReferenceById(eq(mockUser.getId()))).thenReturn(mockUser);
 		when(userRepository.existsById(eq(mockUser.getId()))).thenReturn(true);
 
-		PostCreateReqDto request = new PostCreateReqDto("subject", invalidContent, new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", invalidContent)), "1.0");
+		PostCreateReqDto request = new PostCreateReqDto("subject", content, new HashSet<>());
 
 		// when & then
 		assertThatThrownBy(() -> postService.createPost(mockUser.getId(), request))
@@ -170,7 +180,8 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "테스트")), "1.0");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", content, new HashSet<>(), new HashSet<>());
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 
@@ -190,7 +201,8 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "test")), "1.0");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", content, new HashSet<>(), new HashSet<>());
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.empty());
 
 		// when & then
@@ -206,7 +218,8 @@ public class PostServiceTests {
 		// given
 		User mockUser = makeMockUser();
 		final Long postId = 1L;
-		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", "newContent", new HashSet<>(), new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "test")), "1.0");
+		PostUpdateReqDto request = new PostUpdateReqDto("newSubject", content, new HashSet<>(), new HashSet<>());
 		Post mockPost = makeMockPost(postId, mockUser);
 		when(postRepository.findById(eq(postId))).thenReturn(Optional.of(mockPost));
 

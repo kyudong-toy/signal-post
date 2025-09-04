@@ -1,5 +1,7 @@
 package dev.kyudong.back.post.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidAccessException;
 import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.api.dto.event.PostCreateFeedEvent;
@@ -35,6 +37,7 @@ public class PostService {
 	private final PostRepository postRepository;
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
+	private final ObjectMapper objectMapper;
 
 	@Transactional(readOnly = true)
 	public PostDetailResDto findPostById(long postId) {
@@ -59,9 +62,16 @@ public class PostService {
 		}
 		User user = userRepository.getReferenceById(userId);
 
+		String content;
+		try {
+			content = objectMapper.writeValueAsString(request.content());
+		} catch (JsonProcessingException j) {
+			throw new RuntimeException("서버 에러 발생");
+		}
+
 		Post newPost = Post.builder()
 				.subject(request.subject())
-				.content(request.content())
+				.content(content)
 				.build();
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
@@ -105,8 +115,13 @@ public class PostService {
 			post.updateSubject(request.subject());
 		}
 
-		if (StringUtils.hasText(request.content())) {
-			post.updateContent(request.content());
+		try {
+			String content = objectMapper.writeValueAsString(request.content());
+			if (StringUtils.hasText(content)) {
+				post.updateContent(content);
+			}
+		} catch (JsonProcessingException j) {
+			throw new RuntimeException("서버 에러 발생");
 		}
 
 		if (!request.fileIds().isEmpty()) {
