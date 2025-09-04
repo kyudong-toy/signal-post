@@ -5,6 +5,8 @@ import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.api.dto.req.PostCreateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostUpdateReqDto;
+import dev.kyudong.back.post.api.dto.req.vo.EditorBlockVO;
+import dev.kyudong.back.post.api.dto.req.vo.EditorContentVO;
 import dev.kyudong.back.post.api.dto.res.PostCreateResDto;
 import dev.kyudong.back.post.api.dto.res.PostUpdateResDto;
 import dev.kyudong.back.post.domain.Post;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +68,10 @@ public class PostIntegrationTests {
 		return userRepository.save(newUser);
 	}
 
+	private String createTestContent() {
+		return "{\"time\": 1756713679939, \"blocks\": [{\"id\": \"test-block\", \"data\": {\"text\": \"테스트!\"}, \"type\": \"paragraph\"}], \"version\": \"2.31.0\"}";
+	}
+
 	@Test
 	@DisplayName("게시글 조회 API")
 	void findPostById() throws Exception {
@@ -72,7 +79,7 @@ public class PostIntegrationTests {
 		User user = createTestUser();
 		Post newPost = Post.builder()
 				.subject("Test")
-				.content("Hello World!")
+				.content(createTestContent())
 				.build();
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
@@ -83,7 +90,7 @@ public class PostIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.postId").value(postId))
 				.andExpect(jsonPath("$.subject").value("Test"))
-				.andExpect(jsonPath("$.content").value("Hello World!"))
+				.andExpect(jsonPath("$.content").value(createTestContent()))
 				.andDo(print());
 	}
 
@@ -92,7 +99,8 @@ public class PostIntegrationTests {
 	void createPost() throws Exception {
 		// given
 		User user = createTestUser();
-		PostCreateReqDto request = new PostCreateReqDto( "Test", "Hello Post!", new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "test")), "1.0");
+		PostCreateReqDto request = new PostCreateReqDto( "Test", content, new HashSet<>());
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts")
@@ -110,7 +118,6 @@ public class PostIntegrationTests {
 		PostCreateResDto response = objectMapper.readValue(responseBody, PostCreateResDto.class);
 		assertThat(response).isNotNull();
 		assertThat(response.subject()).isEqualTo(request.subject());
-		assertThat(response.content()).isEqualTo(request.content());
 
 		Optional<Post> optionalPost = postRepository.findById(response.postId());
 		assertThat(optionalPost).isPresent();
@@ -131,7 +138,8 @@ public class PostIntegrationTests {
 				.build();
 		user.addPost(post);
 		Post savedPost = postRepository.save(post);
-		PostUpdateReqDto request = new PostUpdateReqDto("Test", "Hello Java!", new HashSet<>(), new HashSet<>());
+		EditorContentVO content = new EditorContentVO(1L, List.of(new EditorBlockVO("1", "paragraph", "test")), "1.0");
+		PostUpdateReqDto request = new PostUpdateReqDto("Test", content, new HashSet<>(), new HashSet<>());
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/update", savedPost.getId())

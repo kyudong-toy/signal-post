@@ -7,10 +7,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 
-public class CustomUserPrincipal implements UserDetails {
+public class CustomUserPrincipal implements UserDetails, Principal, Serializable {
 
 	private final Long id;
 
@@ -63,6 +65,11 @@ public class CustomUserPrincipal implements UserDetails {
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
+	}
+
+	@Override
+	public String getName() {
+		return this.username;
 	}
 
 }

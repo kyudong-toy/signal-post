@@ -1,5 +1,6 @@
 package dev.kyudong.back.post.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.kyudong.back.post.api.dto.req.PostCreateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.api.dto.req.PostUpdateReqDto;
@@ -126,7 +127,7 @@ public interface PostApi {
 	ResponseEntity<PostCreateResDto> createUser(
 			@RequestBody @Valid PostCreateReqDto request,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
-	);
+	) throws JsonProcessingException;
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
