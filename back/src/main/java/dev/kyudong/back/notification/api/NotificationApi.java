@@ -60,7 +60,7 @@ public interface NotificationApi {
 					)
 			),
 	})
-	ResponseEntity<NotificationResDto> findCommentsByPostId(
+	ResponseEntity<NotificationResDto> findNotifications(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@Parameter(name = "lastFeedId", description = "마지막으로 조회한 알림의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")

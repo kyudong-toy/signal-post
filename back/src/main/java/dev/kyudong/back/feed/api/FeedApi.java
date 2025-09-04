@@ -59,7 +59,7 @@ public interface FeedApi {
 					)
 			),
 	})
-	ResponseEntity<FeedDetailResDto> findCommentsByPostId(
+	ResponseEntity<FeedDetailResDto> findFeeds(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@Parameter(name = "lastFeedId", description = "마지막으로 조회한 피드의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")

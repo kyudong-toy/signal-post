@@ -21,7 +21,7 @@ public class FeedController implements FeedApi {
 
 	@Override
 	@GetMapping
-	public ResponseEntity<FeedDetailResDto> findCommentsByPostId(
+	public ResponseEntity<FeedDetailResDto> findFeeds(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@RequestParam(required = false) Long lastFeedId,
 			@RequestParam(defaultValue = "10") @Positive int size) {

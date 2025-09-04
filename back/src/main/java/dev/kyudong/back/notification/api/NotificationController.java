@@ -18,7 +18,7 @@ public class NotificationController implements NotificationApi {
 
 	@Override
 	@GetMapping
-	public ResponseEntity<NotificationResDto> findCommentsByPostId(
+	public ResponseEntity<NotificationResDto> findNotifications(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@RequestParam(required = false) Long lastNotificationId,
 			@RequestParam(defaultValue = "10") @Positive int size) {
