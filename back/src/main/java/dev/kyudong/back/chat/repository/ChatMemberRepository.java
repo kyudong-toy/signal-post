@@ -28,4 +28,15 @@ public interface ChatMemberRepository extends JpaRepository<ChatMember, Long> {
 
 	Optional<ChatMember> findByUserAndChatRoom(User leaveUser, ChatRoom chatRoom);
 
+	@Query("""
+			SELECT CASE WHEN COUNT(cm) > 0 THEN true ELSE false END
+			FROM ChatMember cm
+			JOIN cm.user u
+			WHERE u.username = :username
+			  AND cm.chatRoom.id = :roomId
+			  AND cm.status = 'JOINED'
+	""")
+	boolean existsByChatMember(@Param("roomId") Long roomId, @Param("username") String username);
+
+
 }

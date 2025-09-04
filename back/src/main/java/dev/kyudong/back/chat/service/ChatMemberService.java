@@ -7,7 +7,6 @@ import dev.kyudong.back.chat.domain.ChatMember;
 import dev.kyudong.back.chat.domain.ChatRoom;
 import dev.kyudong.back.chat.domain.MemberStatus;
 import dev.kyudong.back.chat.domain.RoomStatus;
-import dev.kyudong.back.chat.event.ChatEventHandler;
 import dev.kyudong.back.chat.exception.ChatMemberNotFoundException;
 import dev.kyudong.back.chat.exception.ChatRoomNotFoundException;
 import dev.kyudong.back.chat.repository.ChatMemberRepository;
@@ -17,6 +16,7 @@ import dev.kyudong.back.user.exception.UsersNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ public class ChatMemberService {
 	private final ChatMemberRepository chatMemberRepository;
 	private final ChatRoomRepository chatRoomRepository;
 	private final UserRepository userRepository;
-	private final ChatEventHandler chatEventHandler;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public void inviteChatRoom(final Long userId, final Long roomId, ChatMemberInviteReqDto requset) {
@@ -63,7 +63,7 @@ public class ChatMemberService {
 
 		Set<ChatMember> newMembers = chatRoom.addNewMember(userList);
 
-		chatEventHandler.handleMemberInvite(ChatMemberInviteEvent.of(chatRoom, existsUserIds, newMembers));
+		applicationEventPublisher.publishEvent(ChatMemberInviteEvent.of(chatRoom, existsUserIds, newMembers));
 		log.info("새로운 사용자가 채팅방에 참여하였습니다: roomId={}", roomId);
 	}
 
@@ -86,8 +86,13 @@ public class ChatMemberService {
 
 		chatMember.leave();
 
-		chatEventHandler.handleMemberLeft(ChatMemberLeftEvent.of(roomId, leaveUserId, chatRoom.getChatMembers()));
+		applicationEventPublisher.publishEvent(ChatMemberLeftEvent.of(roomId, leaveUserId, chatRoom.getChatMembers()));
 		log.info("사용자가 채팅방을 떠났습니다: roomId={}, leaveUserId={}", roomId, leaveUserId);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean isChatMember(Long roomId, String username) {
+		return chatMemberRepository.existsByChatMember(roomId, username);
 	}
 
 }
