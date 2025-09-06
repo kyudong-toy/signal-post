@@ -8,7 +8,7 @@ import dev.kyudong.back.notification.handler.NotificationWebSocketHandler;
 import dev.kyudong.back.notification.api.dto.res.NotificationDetailResDto;
 import dev.kyudong.back.notification.repository.NotificationRepository;
 import dev.kyudong.back.notification.utils.RedirectUrlCreator;
-import dev.kyudong.back.post.api.dto.event.PostCreateNotification;
+import dev.kyudong.back.post.domain.dto.event.PostCreateNotification;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

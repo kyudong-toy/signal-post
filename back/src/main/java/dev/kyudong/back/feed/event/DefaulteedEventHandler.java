@@ -4,7 +4,7 @@ import dev.kyudong.back.feed.domain.Feed;
 import dev.kyudong.back.feed.repository.FeedRepository;
 import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
-import dev.kyudong.back.post.api.dto.event.PostCreateFeedEvent;
+import dev.kyudong.back.post.domain.dto.event.PostCreateFeedEvent;
 import dev.kyudong.back.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

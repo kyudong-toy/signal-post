@@ -5,7 +5,6 @@ import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.file.api.dto.res.FileUploadResDto;
 import dev.kyudong.back.file.domain.File;
 import dev.kyudong.back.file.repository.FileRepository;
-import dev.kyudong.back.post.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;

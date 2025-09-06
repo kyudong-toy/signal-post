@@ -1,5 +1,7 @@
 package dev.kyudong.back.notification;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
 import dev.kyudong.back.notification.api.dto.res.NotificationDetailResDto;
@@ -8,8 +10,9 @@ import dev.kyudong.back.notification.event.DefaultNotificationEventHandler;
 import dev.kyudong.back.notification.handler.NotificationWebSocketHandler;
 import dev.kyudong.back.notification.repository.NotificationRepository;
 import dev.kyudong.back.notification.utils.RedirectUrlCreator;
-import dev.kyudong.back.post.api.dto.event.PostCreateNotification;
-import dev.kyudong.back.post.domain.Post;
+import dev.kyudong.back.post.domain.dto.event.PostCreateNotification;
+import dev.kyudong.back.post.domain.entity.Category;
+import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -59,11 +63,31 @@ public class NotificationEventHandlerTests {
 		return mockUser;
 	}
 
-	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.builder()
-				.subject("subject")
-				.content("content")
-				.build();
+	private static Map<String, Object> createMockTiptapContent() {
+		Map<String, Object> textNode = Map.of(
+				"type", "text",
+				"text", "테스트입니다"
+		);
+
+		Map<String, Object> paragraphNode = Map.of(
+				"type", "paragraph",
+				"content", List.of(textNode)
+		);
+
+		return Map.of(
+				"type", "doc",
+				"content", List.of(paragraphNode)
+		);
+	}
+
+
+	private static Post makeMockPost(User mockUser) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		Post mockPost = Post.of(
+				"제목",
+				objectMapper.writeValueAsString(createMockTiptapContent()),
+				Category.builder().build()
+		);
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
@@ -80,7 +104,7 @@ public class NotificationEventHandlerTests {
 
 	@Test
 	@DisplayName("알림 생성 이벤트 - 성공")
-	void handlePostCreateEvent_success() {
+	void handlePostCreateEvent_success() throws JsonProcessingException {
 		// given
 		User mockFollowing = makeMockUser("cnzn1d", 999L);
 		given(userRepository.getReferenceById(mockFollowing.getId())).willReturn(mockFollowing);

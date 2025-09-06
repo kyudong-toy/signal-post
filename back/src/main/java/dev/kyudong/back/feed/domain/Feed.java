@@ -1,6 +1,6 @@
 package dev.kyudong.back.feed.domain;
 
-import dev.kyudong.back.post.domain.Post;
+import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

@@ -24,7 +24,7 @@ public class FeedController implements FeedApi {
 	public ResponseEntity<FeedDetailResDto> findFeeds(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@RequestParam(required = false) Long lastFeedId,
-			@RequestParam(defaultValue = "10") @Positive int size) {
+			@RequestParam(defaultValue = "30") @Positive int size) {
 		return ResponseEntity.ok(feedService.findFeeds(userPrincipal.getId(), lastFeedId, size));
 	}
 

@@ -115,4 +115,9 @@ public class UserService {
 		return UserStatusUpdateResDto.from(user);
 	}
 
+	@Transactional(readOnly = true)
+	public User getUserProxy(Long userId) {
+		return userRepository.getReferenceById(userId);
+	}
+
 }

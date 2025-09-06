@@ -1,8 +1,8 @@
 package dev.kyudong.back.user.domain;
 
 import dev.kyudong.back.common.exception.InvalidInputException;
-import dev.kyudong.back.post.domain.Comment;
-import dev.kyudong.back.post.domain.Post;
+import dev.kyudong.back.post.domain.entity.Comment;
+import dev.kyudong.back.post.domain.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

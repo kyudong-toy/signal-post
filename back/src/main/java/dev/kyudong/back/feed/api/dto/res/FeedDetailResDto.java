@@ -1,7 +1,7 @@
 package dev.kyudong.back.feed.api.dto.res;
 
 import dev.kyudong.back.feed.domain.Feed;
-import dev.kyudong.back.post.api.dto.res.PostDetailResDto;
+import dev.kyudong.back.post.domain.dto.web.res.PostDetailResDto;
 import org.springframework.data.domain.Slice;
 
 import java.util.List;
