@@ -7,9 +7,10 @@ import dev.kyudong.back.interaction.domain.InteractionType;
 import dev.kyudong.back.interaction.domain.TargetType;
 import dev.kyudong.back.interaction.repository.InteractionRepository;
 import dev.kyudong.back.interaction.service.InteractionService;
-import dev.kyudong.back.post.domain.Post;
-import dev.kyudong.back.post.exception.PostNotFoundException;
-import dev.kyudong.back.post.repository.PostRepository;
+import dev.kyudong.back.post.domain.entity.Category;
+import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
+import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -53,10 +54,7 @@ public class InteractionServiceTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.builder()
-				.subject("subject")
-				.content("content")
-				.build();
+		Post mockPost = Post.of("제목", "", Category.builder().build());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;

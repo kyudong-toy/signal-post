@@ -8,8 +8,9 @@ import dev.kyudong.back.interaction.domain.Interaction;
 import dev.kyudong.back.interaction.domain.InteractionType;
 import dev.kyudong.back.interaction.domain.TargetType;
 import dev.kyudong.back.interaction.repository.InteractionRepository;
-import dev.kyudong.back.post.domain.Post;
-import dev.kyudong.back.post.repository.PostRepository;
+import dev.kyudong.back.post.domain.entity.Category;
+import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -67,10 +68,7 @@ public class InteractionIntegrationTests {
 	}
 
 	private Post createTestPost(User user) {
-		Post newPost = Post.builder()
-				.subject("Hello Subject")
-				.content("Hello Content!")
-				.build();
+		Post newPost = Post.of("제목", "", Category.builder().build());
 		user.addPost(newPost);
 		return postRepository.save(newPost);
 	}

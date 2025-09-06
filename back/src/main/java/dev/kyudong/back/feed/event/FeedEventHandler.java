@@ -1,6 +1,6 @@
 package dev.kyudong.back.feed.event;
 
-import dev.kyudong.back.post.api.dto.event.PostCreateFeedEvent;
+import dev.kyudong.back.post.domain.dto.event.PostCreateFeedEvent;
 
 public interface FeedEventHandler {
 

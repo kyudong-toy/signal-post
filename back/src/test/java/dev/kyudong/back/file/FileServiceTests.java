@@ -9,7 +9,7 @@ import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.service.FileService;
-import dev.kyudong.back.post.api.dto.event.PostCreateFileEvent;
+import dev.kyudong.back.post.domain.dto.event.PostCreateFileEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;

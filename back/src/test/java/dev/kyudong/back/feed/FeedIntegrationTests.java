@@ -7,8 +7,9 @@ import dev.kyudong.back.feed.domain.Feed;
 import dev.kyudong.back.feed.repository.FeedRepository;
 import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
-import dev.kyudong.back.post.domain.Post;
-import dev.kyudong.back.post.repository.PostRepository;
+import dev.kyudong.back.post.domain.entity.Category;
+import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -66,10 +67,7 @@ public class FeedIntegrationTests {
 	}
 
 	private Post createTestPost(User user) {
-		Post newPost = Post.builder()
-				.subject("Test")
-				.content("Hello World!")
-				.build();
+		Post newPost = Post.of("제목", "", Category.builder().build());
 		user.addPost(newPost);
 		return postRepository.save(newPost);
 	}

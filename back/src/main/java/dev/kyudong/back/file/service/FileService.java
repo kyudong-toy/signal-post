@@ -8,8 +8,8 @@ import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.utils.FileValidationUtils;
-import dev.kyudong.back.post.api.dto.event.PostCreateFileEvent;
-import dev.kyudong.back.post.api.dto.event.PostUpdateFileEvent;
+import dev.kyudong.back.post.domain.dto.event.PostCreateFileEvent;
+import dev.kyudong.back.post.domain.dto.event.PostUpdateFileEvent;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -23,7 +23,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -112,12 +111,8 @@ public class FileService {
 		log.info("게시글 수정 이벤트 수신완료: postId={}", postId);
 
 		// 사용하지 않는 파일들을 삭제 처리
-		Set<Long> delIds = event.delFileIds();
-		if (!delIds.isEmpty()) {
-			log.debug("게시글(postId={})에 사용하지 않는 파일을 삭제합니다: delFileIds:{}", postId, delIds);
-			fileRepository.softDeleteByIds(delIds, Instant.now());
-		}
-
+		// todo : 기존 파일 목록 로드 로직 필요
+		
 		// 파일들을 활성화 상태로 변경한다.
 		Set<Long> fileIds = event.fileIds();
 		if (!fileIds.isEmpty()) {
