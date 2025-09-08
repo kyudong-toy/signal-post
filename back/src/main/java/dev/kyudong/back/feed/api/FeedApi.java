@@ -1,5 +1,6 @@
 package dev.kyudong.back.feed.api;
 
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,10 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -62,10 +63,9 @@ public interface FeedApi {
 	ResponseEntity<FeedDetailResDto> findFeeds(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@Parameter(name = "lastFeedId", description = "마지막으로 조회한 피드의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")
-			@RequestParam(required = false) Long lastFeedId,
-			@Parameter(name = "size", description = "한 페이지에 불러올 피드 개수", example = "10")
-			@RequestParam(defaultValue = "10") @Positive int size
+			@Parameter(name = "page", description = "마지막으로 조회한 피드의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")
+			@RequestParam(required = false) int page,
+			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId
 	);
 
 }

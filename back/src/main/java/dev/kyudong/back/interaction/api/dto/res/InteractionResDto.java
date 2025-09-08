@@ -1,4 +1,4 @@
-package dev.kyudong.back.interaction.api.res;
+package dev.kyudong.back.interaction.api.dto.res;
 
 import dev.kyudong.back.interaction.domain.Interaction;
 import dev.kyudong.back.interaction.domain.InteractionType;

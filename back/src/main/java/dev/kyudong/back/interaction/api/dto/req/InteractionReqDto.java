@@ -1,4 +1,4 @@
-package dev.kyudong.back.interaction.api.req;
+package dev.kyudong.back.interaction.api.dto.req;
 
 import dev.kyudong.back.interaction.domain.InteractionType;
 import jakarta.validation.constraints.NotNull;

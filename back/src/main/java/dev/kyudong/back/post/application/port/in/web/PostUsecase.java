@@ -1,4 +1,4 @@
-package dev.kyudong.back.post.application.port.in;
+package dev.kyudong.back.post.application.port.in.web;
 
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
@@ -8,10 +8,19 @@ import dev.kyudong.back.post.domain.dto.web.res.PostDetailResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostUpdateResDto;
 import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.user.domain.User;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 public interface PostUsecase {
 
-	PostDetailResDto findPostById(Long postId);
+	PostDetailResDto findPostByIdWithUser(Long userId, Long postId);
+
+	PostDetailResDto findPostByIdWithGuest(String guestId, Long postId);
 
 	PostCreateResDto createPost(Long userId, PostCreateReqDto request);
 
@@ -22,5 +31,19 @@ public interface PostUsecase {
 	void validatePostExists(Long postId);
 
 	Post getPostEntityOrThrow(Long postId);
+
+	List<Post> findRecentPostsWithUser(User user, Instant now, int size);
+
+	List<Post> findRecentPostsWithGuest(Instant now, int size);
+
+	List<Post> findPopularPostsWithUser(User user, Instant now, int size);
+
+	List<Post> findPopularPostsWithGuest(Instant now, int size);
+
+	List<Post> findByFollowingPost(User user, Instant now, int size);
+
+	void refreshRandomOldPost();
+
+	List<Post> findAllByIds(Set<Long> postIds);
 
 }

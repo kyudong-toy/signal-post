@@ -1,8 +1,8 @@
-package dev.kyudong.back.post.application.port.out;
+package dev.kyudong.back.post.application.port.in.web;
 
 import dev.kyudong.back.post.domain.entity.Category;
 
-public interface CategoryPersistencePort {
+public interface CategoryUsecase {
 
 	Category findByCategoryCode(String categoryCode);
 

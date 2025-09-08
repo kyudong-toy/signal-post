@@ -1,4 +1,4 @@
-package dev.kyudong.back.post.application.port.in;
+package dev.kyudong.back.post.application.port.in.web;
 
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;

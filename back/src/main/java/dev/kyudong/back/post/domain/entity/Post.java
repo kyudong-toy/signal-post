@@ -38,6 +38,12 @@ public class Post {
 	@Column(name = "CONTENT", nullable = false, columnDefinition = "jsonb")
 	private String content;
 
+	@Column(name = "POST_VIEW_COUNT")
+	private Long postViewCount;
+
+	@Column(name = "POST_SCORE")
+	private Double postScore;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "CATEGORY_ID", nullable = false)
 	private Category category;
@@ -113,6 +119,14 @@ public class Post {
 		this.status = PostStatus.NORMAL;
 	}
 
+	public void increaseCount() {
+		this.postViewCount++;
+	}
+
+	public void updateScore(double score) {
+		this.postScore += score;
+	}
+
 	/**
 	 * addPost를 이용한 호출을 권장합니다.
 	 * @param user 게시글 소유자.
@@ -139,6 +153,21 @@ public class Post {
 
 	public void addTags(@NonNull Set<Tag> tags) {
 		this.tags.addAll(tags);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Post post = (Post) o;
+
+		return Objects.equals(id, post.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, user);
 	}
 
 }

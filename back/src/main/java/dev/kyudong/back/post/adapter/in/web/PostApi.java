@@ -1,6 +1,7 @@
 package dev.kyudong.back.post.adapter.in.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -78,7 +80,9 @@ public interface PostApi {
 	})
 	ResponseEntity<PostDetailResDto> findPostById(
 			@Parameter(name = "postId", description = "조회할 게시글의 ID", required = true, example = "1")
-			@PathVariable @Positive Long postId
+			@PathVariable @Positive Long postId,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal,
+			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId
 	);
 
 	@SuppressWarnings("unused")

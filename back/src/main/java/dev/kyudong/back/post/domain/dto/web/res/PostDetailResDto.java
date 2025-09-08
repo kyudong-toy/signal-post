@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 public record PostDetailResDto(
 		long postId,
 		long userId,
+		long postViewCount,
 		String subject,
 		String content,
 		PostStatus status,
@@ -17,7 +18,9 @@ public record PostDetailResDto(
 ) {
 	public static PostDetailResDto from(Post post) {
 		return new PostDetailResDto(
-				post.getId(), post.getUser().getId(), post.getSubject(), post.getContent(), post.getStatus(),
+				post.getId(), post.getUser().getId(),
+				post.getPostViewCount(),
+				post.getSubject(), post.getContent(), post.getStatus(),
 				LocalDateTime.ofInstant(post.getCreatedAt(), ZoneOffset.UTC),
 				LocalDateTime.ofInstant(post.getModifiedAt(), ZoneOffset.UTC)
 		);

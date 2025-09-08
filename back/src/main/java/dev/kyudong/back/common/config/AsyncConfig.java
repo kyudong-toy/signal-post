@@ -1,12 +1,15 @@
 package dev.kyudong.back.common.config;
 
 import lombok.NonNull;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @EnableAsync
@@ -20,10 +23,14 @@ public class AsyncConfig implements AsyncConfigurer {
 		executor.setMaxPoolSize(10);
 		executor.setQueueCapacity(20);
 		executor.setThreadNamePrefix("signal-async-task-");
-
 		executor.initialize();
 
 		return executor;
+	}
+
+	@Bean(name = "feedExecutorService")
+	public ExecutorService feedExecutorService() {
+		return Executors.newFixedThreadPool(5);
 	}
 
 }

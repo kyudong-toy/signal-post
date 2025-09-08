@@ -2,7 +2,7 @@ package dev.kyudong.back.post.adapter.out.persistence.adapter;
 
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.repository.CommentRepository;
-import dev.kyudong.back.post.application.port.out.CommentPersistencePort;
+import dev.kyudong.back.post.application.port.out.web.CommentPersistencePort;
 import dev.kyudong.back.post.domain.entity.Comment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

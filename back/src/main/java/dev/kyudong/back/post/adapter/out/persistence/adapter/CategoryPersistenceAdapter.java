@@ -1,7 +1,7 @@
 package dev.kyudong.back.post.adapter.out.persistence.adapter;
 
 import dev.kyudong.back.post.adapter.out.persistence.repository.CategoryRepository;
-import dev.kyudong.back.post.application.port.out.CategoryPersistencePort;
+import dev.kyudong.back.post.application.port.out.web.CategoryPersistencePort;
 import dev.kyudong.back.post.domain.entity.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

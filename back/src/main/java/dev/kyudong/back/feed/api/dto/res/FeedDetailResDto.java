@@ -1,28 +1,23 @@
 package dev.kyudong.back.feed.api.dto.res;
 
-import dev.kyudong.back.feed.domain.Feed;
 import dev.kyudong.back.post.domain.dto.web.res.PostDetailResDto;
-import org.springframework.data.domain.Slice;
+import dev.kyudong.back.post.domain.entity.Post;
 
+import java.util.Collections;
 import java.util.List;
 
 public record FeedDetailResDto(
-		Long lastFeedId,
 		boolean hasNext,
+		Integer nextPage,
 		List<PostDetailResDto> content
 ) {
-	public static FeedDetailResDto from(Slice<Feed> feeds) {
-		List<PostDetailResDto> content = feeds.getContent().stream()
-				.map(feed -> PostDetailResDto.from(feed.getPost()))
+	public static FeedDetailResDto empty() {
+		return new FeedDetailResDto(false, 0, Collections.emptyList());
+	}
+	public static FeedDetailResDto of(boolean hasNext, Integer nextPage, List<Post> posts) {
+		List<PostDetailResDto> content = posts.stream()
+				.map(PostDetailResDto::from)
 				.toList();
-
-		Long lastFeedId = null;
-		boolean hasNext = feeds.hasNext();
-
-		if (!content.isEmpty() && hasNext) {
-			lastFeedId = content.get(content.size() - 1).postId();
-		}
-
-		return new FeedDetailResDto(lastFeedId, hasNext, content);
+		return new FeedDetailResDto(hasNext, nextPage, content);
 	}
 }

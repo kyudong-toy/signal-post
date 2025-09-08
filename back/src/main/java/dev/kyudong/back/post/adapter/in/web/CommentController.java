@@ -1,6 +1,6 @@
 package dev.kyudong.back.post.adapter.in.web;
 
-import dev.kyudong.back.post.application.port.in.CommentUsecase;
+import dev.kyudong.back.post.application.port.in.web.CommentUsecase;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;

@@ -36,6 +36,12 @@ spring:
     scheduling:
       pool:
         size: 5
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      repositories:
+        enabled: false
 
 # ===================================================================
 # Springdoc (Swagger UI) Configuration

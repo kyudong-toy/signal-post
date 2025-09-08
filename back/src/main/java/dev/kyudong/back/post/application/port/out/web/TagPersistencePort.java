@@ -1,4 +1,4 @@
-package dev.kyudong.back.post.application.port.out;
+package dev.kyudong.back.post.application.port.out.web;
 
 import dev.kyudong.back.post.domain.entity.Tag;
 

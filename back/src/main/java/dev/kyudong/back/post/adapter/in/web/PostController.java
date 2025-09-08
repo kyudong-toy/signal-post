@@ -1,6 +1,7 @@
 package dev.kyudong.back.post.adapter.in.web;
 
-import dev.kyudong.back.post.application.port.in.PostUsecase;
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
+import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
@@ -28,8 +29,18 @@ public class PostController implements PostApi {
 
 	@Override
 	@GetMapping("/{postId}")
-	public ResponseEntity<PostDetailResDto> findPostById(@PathVariable @Positive Long postId) {
-		return ResponseEntity.ok(postUsecase.findPostById(postId));
+	public ResponseEntity<PostDetailResDto> findPostById(
+			@PathVariable @Positive Long postId,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
+			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId) {
+
+		boolean isLoggedIn = userPrincipal != null;
+
+		PostDetailResDto response = isLoggedIn
+				? postUsecase.findPostByIdWithUser(userPrincipal.getId(), postId)
+				: postUsecase.findPostByIdWithGuest(guestId, postId);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@Override

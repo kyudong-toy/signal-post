@@ -1,13 +1,14 @@
-package dev.kyudong.back.post.application.service;
+package dev.kyudong.back.post.application.service.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.post.application.port.in.CategoryUsecase;
-import dev.kyudong.back.post.application.port.in.TagUsecase;
-import dev.kyudong.back.post.application.port.out.PostEventPublishPort;
-import dev.kyudong.back.post.application.port.out.PostPersistencePort;
+import dev.kyudong.back.post.application.port.in.web.CategoryUsecase;
+import dev.kyudong.back.post.application.port.in.web.TagUsecase;
+import dev.kyudong.back.post.application.port.out.event.PostEventPublishPort;
+import dev.kyudong.back.post.application.port.out.event.PostViewEventPublishPort;
+import dev.kyudong.back.post.application.port.out.web.PostPersistencePort;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
@@ -15,7 +16,7 @@ import dev.kyudong.back.post.domain.dto.web.res.PostCreateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostDetailResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostUpdateResDto;
-import dev.kyudong.back.post.application.port.in.PostUsecase;
+import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.domain.entity.Category;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.domain.entity.PostStatus;
@@ -24,10 +25,12 @@ import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -38,19 +41,71 @@ public class PostService implements PostUsecase {
 	private final ObjectMapper objectMapper;
 	private final UserService userService;
 	private final PostEventPublishPort postEventPublishPort;
+	private final PostViewEventPublishPort postViewEventPublishPort;
 	private final PostPersistencePort postPersistencePort;
 	private final TagUsecase tagUsecase;
 	private final CategoryUsecase categoryUsecase;
+	private final RedissonClient redissonClient;
 
 	@Override
 	@Transactional(readOnly = true)
-	public PostDetailResDto findPostById(Long postId) {
-		log.debug("게시글 조회를 시작합니다: postId={}", postId);
+	public PostDetailResDto findPostByIdWithUser(Long userId, Long postId) {
+		log.debug("사용자가 게시글 조회를 시작합니다: postId={}", postId);
 
 		Post post = postPersistencePort.findByIdOrThrow(postId);
 
-		log.info("게시글을 조회했습니다: postId={}", postId);
+		if (userId !=  null && !userId.equals(post.getUser().getId())) {
+			User user = userService.getUserProxy(userId);
+			postViewEventPublishPort.increasePostViewWithUser(user, post);
+			redissonClient.getBloomFilter("feed_seen:user" + userId).add(postId);
+		}
+
 		return PostDetailResDto.from(post);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public PostDetailResDto findPostByIdWithGuest(String guestId, Long postId) {
+		log.debug("게스트가 게시글 조회를 시작합니다: postId={}", postId);
+
+		Post post = postPersistencePort.findByIdOrThrow(postId);
+		postViewEventPublishPort.increasePostViewWithGuest(guestId, post);
+		redissonClient.getBloomFilter("feed_seen:guest" + guestId).add(postId);
+
+		return PostDetailResDto.from(post);
+	}
+
+	@Override
+	public List<Post> findRecentPostsWithUser(User user, Instant now, int size) {
+		return postPersistencePort.findRecentPostsWithUser(user, now, size);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findRecentPostsWithGuest(Instant now, int size) {
+		return postPersistencePort.findRecentPostsWithGuest(now, size);
+	}
+
+	@Override
+	public List<Post> findPopularPostsWithUser(User user, Instant now, int size) {
+		return postPersistencePort.findPopularPostsWithUser(user, now, size);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findPopularPostsWithGuest(Instant now, int size) {
+		return postPersistencePort.findPopularPostsWithGuest(now, size);
+	}
+
+	@Override
+	public List<Post> findByFollowingPost(User user, Instant now, int size) {
+		return postPersistencePort.findByFollowingPost(user, now, size);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findAllByIds(Set<Long> postIds) {
+		return postPersistencePort.findAllByIds(postIds);
 	}
 
 	@Override
@@ -98,6 +153,7 @@ public class PostService implements PostUsecase {
 		return PostUpdateResDto.from(post);
 	}
 
+	@Override
 	@Transactional
 	public PostStatusUpdateResDto updatePostStatus(Long postId, Long userId, PostStatusUpdateReqDto request) {
 		log.debug("게시글 상태 수정 요청 시작: userId: {}, postId: {}", userId, postId);
@@ -117,6 +173,12 @@ public class PostService implements PostUsecase {
 
 		log.info("게시글 상태를 수정했습니다: userId={}, postId={}, prevStatus={} curStatus={}", post.getUser().getId(), post.getId(), prevStatus, post.getStatus().name());
 		return PostStatusUpdateResDto.from(post);
+	}
+
+	@Override
+	@Transactional
+	public void refreshRandomOldPost() {
+		postPersistencePort.refreshRandomOldPost();
 	}
 
 	/**

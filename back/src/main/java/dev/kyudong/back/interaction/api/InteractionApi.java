@@ -1,8 +1,8 @@
 package dev.kyudong.back.interaction.api;
 
 import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
-import dev.kyudong.back.interaction.api.req.InteractionReqDto;
-import dev.kyudong.back.interaction.api.res.InteractionResDto;
+import dev.kyudong.back.interaction.api.dto.req.InteractionReqDto;
+import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.TargetType;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,6 +92,7 @@ public interface InteractionApi {
 			@RequestBody InteractionReqDto request
 	);
 
+	@SuppressWarnings("unused")
 	@Operation(summary = "사용자와 대상의 상호작용 취소", description = "사용자와 대상의 상호작용을 취소(삭제)합니다")
 	@ApiResponses({
 			@ApiResponse(responseCode = "204", description = "사용자와 대상의 상호작용을 취소(삭제)합니다"),
