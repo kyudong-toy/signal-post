@@ -1,6 +1,7 @@
-package dev.kyudong.back.common.stomp;
+package dev.kyudong.back.common.interceptor;
 
 import dev.kyudong.back.common.jwt.JwtUtil;
+import dev.kyudong.back.common.stomp.StompAuthorizationManager;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

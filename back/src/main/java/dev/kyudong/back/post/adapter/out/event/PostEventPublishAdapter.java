@@ -1,6 +1,6 @@
 package dev.kyudong.back.post.adapter.out.event;
 
-import dev.kyudong.back.post.application.port.out.PostEventPublishPort;
+import dev.kyudong.back.post.application.port.out.event.PostEventPublishPort;
 import dev.kyudong.back.post.domain.dto.event.PostCreateFeedEvent;
 import dev.kyudong.back.post.domain.dto.event.PostCreateFileEvent;
 import dev.kyudong.back.post.domain.dto.event.PostCreateNotification;

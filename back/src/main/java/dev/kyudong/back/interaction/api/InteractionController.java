@@ -1,7 +1,7 @@
 package dev.kyudong.back.interaction.api;
 
-import dev.kyudong.back.interaction.api.req.InteractionReqDto;
-import dev.kyudong.back.interaction.api.res.InteractionResDto;
+import dev.kyudong.back.interaction.api.dto.req.InteractionReqDto;
+import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.TargetType;
 import dev.kyudong.back.interaction.service.InteractionService;
 import dev.kyudong.back.user.security.CustomUserPrincipal;

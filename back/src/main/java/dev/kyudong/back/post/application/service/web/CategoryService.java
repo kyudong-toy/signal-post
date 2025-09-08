@@ -1,7 +1,7 @@
-package dev.kyudong.back.post.application.service;
+package dev.kyudong.back.post.application.service.web;
 
-import dev.kyudong.back.post.application.port.in.CategoryUsecase;
-import dev.kyudong.back.post.application.port.out.CategoryPersistencePort;
+import dev.kyudong.back.post.application.port.in.web.CategoryUsecase;
+import dev.kyudong.back.post.application.port.out.web.CategoryPersistencePort;
 import dev.kyudong.back.post.domain.entity.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

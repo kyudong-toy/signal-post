@@ -1,7 +1,7 @@
 package dev.kyudong.back.common.config;
 
-import dev.kyudong.back.common.jwt.JwtHandshakeInterceptor;
-import dev.kyudong.back.common.stomp.StompChannelInterceptor;
+import dev.kyudong.back.common.interceptor.JwtHandshakeInterceptor;
+import dev.kyudong.back.common.interceptor.StompChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;

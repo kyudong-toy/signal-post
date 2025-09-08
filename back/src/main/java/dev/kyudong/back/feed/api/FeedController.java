@@ -1,16 +1,13 @@
 package dev.kyudong.back.feed.api;
 
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
 import dev.kyudong.back.feed.service.FeedService;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,9 +20,16 @@ public class FeedController implements FeedApi {
 	@GetMapping
 	public ResponseEntity<FeedDetailResDto> findFeeds(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@RequestParam(required = false) Long lastFeedId,
-			@RequestParam(defaultValue = "30") @Positive int size) {
-		return ResponseEntity.ok(feedService.findFeeds(userPrincipal.getId(), lastFeedId, size));
+			@RequestParam(required = false, defaultValue = "0") int page,
+			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId) {
+
+		boolean isLoggedIn = userPrincipal != null;
+
+		FeedDetailResDto response = isLoggedIn
+				? feedService.findFeedsByUser(userPrincipal.getId(), page)
+				: feedService.findFeedsWithGuset(guestId, page);
+
+		return ResponseEntity.ok(response);
 	}
 
 }

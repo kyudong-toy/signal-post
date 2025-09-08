@@ -1,4 +1,4 @@
-package dev.kyudong.back.common.jwt;
+package dev.kyudong.back.common.interceptor;
 
 import jakarta.annotation.Nullable;
 import lombok.NonNull;

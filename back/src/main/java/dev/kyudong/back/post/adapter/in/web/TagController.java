@@ -1,6 +1,6 @@
 package dev.kyudong.back.post.adapter.in.web;
 
-import dev.kyudong.back.post.application.port.in.TagUsecase;
+import dev.kyudong.back.post.application.port.in.web.TagUsecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

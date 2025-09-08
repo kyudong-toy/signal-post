@@ -20,6 +20,13 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 	Optional<Follow> findByFollowerAndFollowingAndStatus(User follower, User following, FollowStatus status);
 
-	@Query("SELECT f FROM Follow f JOIN FETCH f.follower WHERE f.following = :author AND f.status = 'FOLLOWING'")
-	List<Follow> findByFollowingWithFollower(@Param("author") User author);
+	@Query("""
+			SELECT f
+			FROM Follow f
+			JOIN FETCH f.follower
+			WHERE f.following = :user
+			AND f.status = 'FOLLOWING'
+	""")
+	List<Follow> findByFollowingWithFollower(@Param("user") User user);
+
 }

@@ -1,7 +1,7 @@
-package dev.kyudong.back.post.application.service;
+package dev.kyudong.back.post.application.service.web;
 
-import dev.kyudong.back.post.application.port.in.TagUsecase;
-import dev.kyudong.back.post.application.port.out.TagPersistencePort;
+import dev.kyudong.back.post.application.port.in.web.TagUsecase;
+import dev.kyudong.back.post.application.port.out.web.TagPersistencePort;
 import dev.kyudong.back.post.domain.entity.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

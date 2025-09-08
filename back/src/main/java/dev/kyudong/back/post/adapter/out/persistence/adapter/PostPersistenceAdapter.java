@@ -2,12 +2,25 @@ package dev.kyudong.back.post.adapter.out.persistence.adapter;
 
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
-import dev.kyudong.back.post.application.port.out.PostPersistencePort;
+import dev.kyudong.back.post.application.port.out.web.PostPersistencePort;
 import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.user.domain.User;
+import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RSet;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -15,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostPersistenceAdapter implements PostPersistencePort {
 
 	private final PostRepository postRepository;
+	private final RedissonClient redissonClient;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -32,8 +46,84 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public boolean existsById(Long postId) {
 		return postRepository.existsById(postId);
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findRecentPostsWithUser(User user, Instant now, int size) {
+		Pageable pageable = PageRequest.of(0, size);
+		return postRepository.findRecentPostsWithUser(user, now, pageable);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findRecentPostsWithGuest(Instant now, int size) {
+		Pageable pageable = PageRequest.of(0, size);
+		return postRepository.findRecentPostsWithGuest(now, pageable);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findPopularPostsWithUser(User user, Instant now, int size) {
+		Pageable pageable = PageRequest.of(0, size);
+		return postRepository.findPopularPostsWithUser(user, now, pageable);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findPopularPostsWithGuest(Instant now, int size) {
+		Pageable pageable = PageRequest.of(0, size);
+		return postRepository.findPopularPostsWithGuest(now, pageable);
+	}
+
+	@Override
+	public List<Post> findByFollowingPost(User user, Instant now, int size) {
+		Pageable pageable = PageRequest.of(0, size);
+		return postRepository.findByFollowingPost(user, now, pageable);
+	}
+
+	@Override
+	@Transactional
+	public void refreshRandomOldPost() {
+		Tuple maxAndMin = postRepository.findMaxAndMin();
+		Long max = maxAndMin.get("max", Long.class);
+		Long min = maxAndMin.get("min", Long.class);
+
+		if (max == 0L || min == 0L || min >= max) {
+			log.info("게시물이 부족하여 추출할 수 없습니다: max={}, min={}", max, min);
+			return;
+		}
+
+		int sampleSize = 1000;
+		Set<Long> randomIds = ThreadLocalRandom.current()
+				.longs(min, max + 1)
+				.distinct()
+				.limit((long) (sampleSize * 1.3))
+				.boxed()
+				.collect(Collectors.toSet());
+		Pageable pageable = PageRequest.of(0, sampleSize);
+
+		List<Long> existingIds = postRepository.findIdsByIdIn(randomIds, pageable);
+		if (existingIds.isEmpty()) {
+			log.debug("게시글을 찾을 수 없어 생성을 중단합니다");
+			return;
+		}
+
+		String cacheKey = "feed:random_post_ids";
+		RSet<Long> cache = redissonClient.getSet(cacheKey);
+		cache.clear();
+		cache.addAll(existingIds);
+		cache.expire(Duration.ofHours(4));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Post> findAllByIds(Set<Long> postIds) {
+		return postRepository.findAllById(postIds);
 	}
 
 }
