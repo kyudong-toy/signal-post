@@ -19,7 +19,7 @@ import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundEx
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.repository.CommentRepository;
 import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
-import dev.kyudong.back.post.application.service.CommentService;
+import dev.kyudong.back.post.application.service.web.CommentService;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -89,7 +89,7 @@ public class CommentServiceTests {
 	}
 
 	private static Post makeMockPost(User mockUser) throws JsonProcessingException {
-		Post mockPost = Post.of("제목", createMockTiptapContent(), Category.builder().build());
+		Post mockPost = Post.create("제목", createMockTiptapContent(), Category.builder().build());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;

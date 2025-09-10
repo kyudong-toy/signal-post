@@ -1,7 +1,7 @@
 package dev.kyudong.back.feed.api;
 
 import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
-import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
+import dev.kyudong.back.feed.api.dto.res.FeedListResDto;
 import dev.kyudong.back.feed.service.FeedService;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +18,15 @@ public class FeedController implements FeedApi {
 
 	@Override
 	@GetMapping
-	public ResponseEntity<FeedDetailResDto> findFeeds(
+	public ResponseEntity<FeedListResDto> findFeeds(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@RequestParam(required = false, defaultValue = "0") int page,
-			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId) {
-
+			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId
+	) {
 		boolean isLoggedIn = userPrincipal != null;
 
-		FeedDetailResDto response = isLoggedIn
-				? feedService.findFeedsByUser(userPrincipal.getId(), page)
+		FeedListResDto response = isLoggedIn
+				? feedService.findFeedsWithUser(userPrincipal.getId(), page)
 				: feedService.findFeedsWithGuset(guestId, page);
 
 		return ResponseEntity.ok(response);

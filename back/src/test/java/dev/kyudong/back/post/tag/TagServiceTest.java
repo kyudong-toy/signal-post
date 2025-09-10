@@ -1,7 +1,7 @@
 package dev.kyudong.back.post.tag;
 
-import dev.kyudong.back.post.application.port.out.TagPersistencePort;
-import dev.kyudong.back.post.application.service.TagService;
+import dev.kyudong.back.post.application.port.out.web.TagPersistencePort;
+import dev.kyudong.back.post.application.service.web.TagService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

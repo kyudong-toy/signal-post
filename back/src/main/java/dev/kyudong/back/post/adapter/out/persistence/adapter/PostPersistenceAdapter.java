@@ -4,7 +4,6 @@ import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundExcep
 import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.post.application.port.out.web.PostPersistencePort;
 import dev.kyudong.back.post.domain.entity.Post;
-import dev.kyudong.back.user.domain.User;
 import jakarta.persistence.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +15,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -51,47 +50,12 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 		return postRepository.existsById(postId);
 	}
 
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findRecentPostsWithUser(User user, Instant now, int size) {
-		Pageable pageable = PageRequest.of(0, size);
-		return postRepository.findRecentPostsWithUser(user, now, pageable);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findRecentPostsWithGuest(Instant now, int size) {
-		Pageable pageable = PageRequest.of(0, size);
-		return postRepository.findRecentPostsWithGuest(now, pageable);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findPopularPostsWithUser(User user, Instant now, int size) {
-		Pageable pageable = PageRequest.of(0, size);
-		return postRepository.findPopularPostsWithUser(user, now, pageable);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findPopularPostsWithGuest(Instant now, int size) {
-		Pageable pageable = PageRequest.of(0, size);
-		return postRepository.findPopularPostsWithGuest(now, pageable);
-	}
-
-	@Override
-	public List<Post> findByFollowingPost(User user, Instant now, int size) {
-		Pageable pageable = PageRequest.of(0, size);
-		return postRepository.findByFollowingPost(user, now, pageable);
-	}
-
 	@Override
 	@Transactional
 	public void refreshRandomOldPost() {
 		Tuple maxAndMin = postRepository.findMaxAndMin();
-		Long max = maxAndMin.get("max", Long.class);
-		Long min = maxAndMin.get("min", Long.class);
+		Long max = Optional.ofNullable(maxAndMin.get("max", Long.class)).orElse(0L);
+		Long min = Optional.of(maxAndMin.get("min", Long.class)).orElse(0L);
 
 		if (max == 0L || min == 0L || min >= max) {
 			log.info("게시물이 부족하여 추출할 수 없습니다: max={}, min={}", max, min);
@@ -118,12 +82,6 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 		cache.clear();
 		cache.addAll(existingIds);
 		cache.expire(Duration.ofHours(4));
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findAllByIds(Set<Long> postIds) {
-		return postRepository.findAllById(postIds);
 	}
 
 }

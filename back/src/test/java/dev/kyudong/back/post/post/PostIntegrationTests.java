@@ -2,6 +2,8 @@ package dev.kyudong.back.post.post;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.IntegrationTestBase;
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.out.persistence.repository.TagRepository;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
@@ -15,19 +17,17 @@ import dev.kyudong.back.post.adapter.out.persistence.repository.CategoryTranslat
 import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -36,10 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
-public class PostIntegrationTests {
+public class PostIntegrationTests extends IntegrationTestBase {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -124,12 +121,12 @@ public class PostIntegrationTests {
 	}
 
 	@Test
-	@DisplayName("게시글 조회 API")
-	void findPostById() throws Exception {
+	@DisplayName("사용자 게시글 조회 API")
+	void findPostById_withUser() throws Exception {
 		// given
 		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
-		Post newPost = Post.of(
+		Post newPost = Post.create(
 				"제목",
 				createMockTiptapContent(),
 				category
@@ -137,9 +134,40 @@ public class PostIntegrationTests {
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
 		final Long postId = savedPost.getId();
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
 
 		// when & then
-		mockMvc.perform(get("/api/v1/posts/{postId}", postId))
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.cookie(cookie))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.postId").value(postId))
+				.andExpect(jsonPath("$.subject").value(newPost.getSubject()))
+				.andDo(print());
+	}
+
+	@Test
+	@DisplayName("게스트 게시글 조회 API")
+	void findPostById_withGuest() throws Exception {
+		// given
+		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
+		User user = createTestUser();
+		Post newPost = Post.create(
+				"제목",
+				createMockTiptapContent(),
+				category
+		);
+		user.addPost(newPost);
+		Post savedPost = postRepository.save(newPost);
+		final Long postId = savedPost.getId();
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
+
+		// when & then
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.cookie(cookie))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.postId").value(postId))
 				.andExpect(jsonPath("$.subject").value(newPost.getSubject()))
@@ -206,7 +234,7 @@ public class PostIntegrationTests {
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isCreated())
-				.andExpect(header().exists("Lo cation"))
+				.andExpect(header().exists("Location"))
 				.andExpect(header().string("Location", CoreMatchers.containsString("/api/v1/posts/")))
 				.andDo(print())
 				.andReturn();
@@ -231,7 +259,7 @@ public class PostIntegrationTests {
 		// given
 		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
-		Post newPost = Post.of(
+		Post newPost = Post.create(
 				"제목",
 				createMockTiptapContent(),
 				category
@@ -270,7 +298,7 @@ public class PostIntegrationTests {
 		// given
 		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
-		Post newPost = Post.of(
+		Post newPost = Post.create(
 				"제목",
 				createMockTiptapContent(),
 				category

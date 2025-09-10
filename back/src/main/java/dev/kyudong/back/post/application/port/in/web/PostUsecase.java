@@ -32,18 +32,6 @@ public interface PostUsecase {
 
 	Post getPostEntityOrThrow(Long postId);
 
-	List<Post> findRecentPostsWithUser(User user, Instant now, int size);
-
-	List<Post> findRecentPostsWithGuest(Instant now, int size);
-
-	List<Post> findPopularPostsWithUser(User user, Instant now, int size);
-
-	List<Post> findPopularPostsWithGuest(Instant now, int size);
-
-	List<Post> findByFollowingPost(User user, Instant now, int size);
-
 	void refreshRandomOldPost();
-
-	List<Post> findAllByIds(Set<Long> postIds);
 
 }

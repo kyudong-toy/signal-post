@@ -19,7 +19,7 @@ public record PostDetailResDto(
 	public static PostDetailResDto from(Post post) {
 		return new PostDetailResDto(
 				post.getId(), post.getUser().getId(),
-				post.getPostViewCount(),
+				post.getViewCount(),
 				post.getSubject(), post.getContent(), post.getStatus(),
 				LocalDateTime.ofInstant(post.getCreatedAt(), ZoneOffset.UTC),
 				LocalDateTime.ofInstant(post.getModifiedAt(), ZoneOffset.UTC)

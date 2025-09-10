@@ -73,7 +73,7 @@ public class CommentIntegrationTests {
 	}
 
 	private Post createTestPost(User user) {
-		Post newPost = Post.of("제목", "", Category.builder().build());
+		Post newPost = Post.create("제목", "", Category.builder().build());
 		user.addPost(newPost);
 		return postRepository.save(newPost);
 	}

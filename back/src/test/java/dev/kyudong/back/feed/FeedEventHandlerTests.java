@@ -48,7 +48,7 @@ public class FeedEventHandlerTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.of("제목", "", Category.builder().build());
+		Post mockPost = Post.create("제목", "", Category.builder().build());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
