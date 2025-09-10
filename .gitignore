@@ -11,6 +11,11 @@ front/dist
 front/dist-ssr
 front/*.local
 
+### Infra ###
+*.crt
+*.key
+*.pem
+
 ### Logs ###
 logs
 *.log
