@@ -1,0 +1,43 @@
+# 프론트, 백엔드 개발시 사용해주세요
+version: '3.9'
+services:
+  nginx:
+    image: nginx:latest
+    container_name: signal-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/certs:/etc/nginx/certs:ro
+    networks:
+      - signal-network
+  postgres:
+    image: postgres:15
+    container_name: signal-postgre
+    environment:
+      - POSTGRES_DB=signalpost
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_temp:/var/lib/postgresql/data
+    networks:
+      - signal-network
+  redis:
+    image: redis:7-alpine
+    container_name: signal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/redis-dev.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - signal-network
+networks:
+  signal-network:
+    driver: bridge
+volumes:
+  pgdata_temp:
