@@ -30,7 +30,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -76,45 +75,12 @@ public class PostService implements PostUsecase {
 	}
 
 	@Override
-	public List<Post> findRecentPostsWithUser(User user, Instant now, int size) {
-		return postPersistencePort.findRecentPostsWithUser(user, now, size);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findRecentPostsWithGuest(Instant now, int size) {
-		return postPersistencePort.findRecentPostsWithGuest(now, size);
-	}
-
-	@Override
-	public List<Post> findPopularPostsWithUser(User user, Instant now, int size) {
-		return postPersistencePort.findPopularPostsWithUser(user, now, size);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findPopularPostsWithGuest(Instant now, int size) {
-		return postPersistencePort.findPopularPostsWithGuest(now, size);
-	}
-
-	@Override
-	public List<Post> findByFollowingPost(User user, Instant now, int size) {
-		return postPersistencePort.findByFollowingPost(user, now, size);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Post> findAllByIds(Set<Long> postIds) {
-		return postPersistencePort.findAllByIds(postIds);
-	}
-
-	@Override
 	@Transactional
 	public PostCreateResDto createPost(Long userId, PostCreateReqDto request) {
 		log.debug("게시글 생성을 시작합니다: userId={}, subject={}", userId, request.subject());
 
 		Category category = categoryUsecase.findByCategoryCode(request.categoryCode());
-		Post newPost = Post.of(
+		Post newPost = Post.create(
 				request.subject(),
 				conventContentJsonToString(request.content()),
 				category

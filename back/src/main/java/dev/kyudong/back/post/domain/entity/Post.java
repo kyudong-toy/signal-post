@@ -39,10 +39,10 @@ public class Post {
 	private String content;
 
 	@Column(name = "POST_VIEW_COUNT")
-	private Long postViewCount;
+	private long viewCount;
 
 	@Column(name = "POST_SCORE")
-	private Double postScore;
+	private double score;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "CATEGORY_ID", nullable = false)
@@ -80,9 +80,11 @@ public class Post {
 		this.content = content;
 		this.category = category;
 		this.status = PostStatus.NORMAL;
+		this.viewCount = 0L;
+		this.score = 100.0D;
 	}
 
-	public static Post of(String subject, String content, Category category) {
+	public static Post create(String subject, String content, Category category) {
 		return new Post(subject, content, category);
 	}
 
@@ -120,11 +122,11 @@ public class Post {
 	}
 
 	public void increaseCount() {
-		this.postViewCount++;
+		this.viewCount++;
 	}
 
 	public void updateScore(double score) {
-		this.postScore += score;
+		this.score += score;
 	}
 
 	/**
@@ -167,7 +169,7 @@ public class Post {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, user);
+		return Objects.hash(id);
 	}
 
 }

@@ -2,19 +2,9 @@
 # Spring Boot Core Configuration
 # ===================================================================
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb-${random.uuid};MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: true
-        format_sql: true
-    open-in-view: false
-    defer-datasource-initialization: true
 
 # ===================================================================
 # log Configuration
@@ -23,8 +13,12 @@ logging:
   level:
     root: INFO
     org.springframework: INFO
-    org.hibernate: WARN
+    org.hibernate: INFO
     dev.kyudong.back: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
+    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: DEBUG
+    net.ttddyy.dsproxy.listener.logging.SLF4JSlowQueryListener: WARN
 
 # ===================================================================
 # jwt Configuration
@@ -39,3 +33,19 @@ jwt:
 file:
   upload-dir: /test/uploads
   public-web-path: /media/
+
+# ===================================================================
+# datasource-proxy Configuration
+# ===================================================================
+decorator:
+  datasource:
+    enabled: true
+    datasource-proxy:
+      json-format: true
+      logging: slf4j
+      multiline: true
+      query:
+        enable-logging: true
+      slow-query:
+        enable-logging: true
+        log-level: INFO

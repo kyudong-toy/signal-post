@@ -7,9 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @Component
 @EnableAsync
@@ -30,7 +28,12 @@ public class AsyncConfig implements AsyncConfigurer {
 
 	@Bean(name = "feedExecutorService")
 	public ExecutorService feedExecutorService() {
-		return Executors.newFixedThreadPool(5);
+		return new ThreadPoolExecutor(
+				5,
+				10,
+				60, TimeUnit.SECONDS,
+				new LinkedBlockingQueue<>(100)
+		);
 	}
 
 }

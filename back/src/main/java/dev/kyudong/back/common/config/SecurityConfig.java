@@ -42,8 +42,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth ->
 					auth.requestMatchers("/ws/**").permitAll() // Interceptor가 처리
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/v1/posts/**", "/api/v1/feeds").permitAll()
+						.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/v1/users", "/api/v1/users/login").permitAll()
 						.anyRequest().authenticated()
 				)
@@ -54,7 +54,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+		configuration.setAllowedOrigins(List.of("https://localhost"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setExposedHeaders(List.of("Authorization", "Location"));

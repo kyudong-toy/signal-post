@@ -3,7 +3,7 @@ package dev.kyudong.back.post.tag;
 import dev.kyudong.back.common.config.SecurityConfig;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.in.web.TagController;
-import dev.kyudong.back.post.application.port.in.TagUsecase;
+import dev.kyudong.back.post.application.port.in.web.TagUsecase;
 import dev.kyudong.back.security.WithMockCustomUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

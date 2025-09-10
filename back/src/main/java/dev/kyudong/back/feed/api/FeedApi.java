@@ -1,7 +1,7 @@
 package dev.kyudong.back.feed.api;
 
 import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
-import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
+import dev.kyudong.back.feed.api.dto.res.FeedListResDto;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,7 +37,7 @@ public interface FeedApi {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "게시글 조회",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = FeedDetailResDto.class),
+							schema = @Schema(implementation = FeedListResDto.class),
 							examples = @ExampleObject(value =
 									"""
 									{
@@ -60,7 +60,7 @@ public interface FeedApi {
 					)
 			),
 	})
-	ResponseEntity<FeedDetailResDto> findFeeds(
+	ResponseEntity<FeedListResDto> findFeeds(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@Parameter(name = "page", description = "마지막으로 조회한 피드의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")

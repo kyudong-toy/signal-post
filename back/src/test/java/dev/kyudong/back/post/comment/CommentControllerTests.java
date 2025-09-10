@@ -18,7 +18,7 @@ import dev.kyudong.back.post.domain.entity.CommentStatus;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.post.application.service.CommentService;
+import dev.kyudong.back.post.application.service.web.CommentService;
 import dev.kyudong.back.security.WithMockCustomUser;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -77,7 +77,7 @@ public class CommentControllerTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.of("제목", "", Category.builder().build());
+		Post mockPost = Post.create("제목", "", Category.builder().build());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;

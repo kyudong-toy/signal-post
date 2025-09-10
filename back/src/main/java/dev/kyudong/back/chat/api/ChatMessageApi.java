@@ -2,7 +2,6 @@ package dev.kyudong.back.chat.api;
 
 import dev.kyudong.back.chat.api.dto.req.ChatMessageCreateReqDto;
 import dev.kyudong.back.chat.api.dto.res.ChatMessageResDto;
-import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,7 +42,7 @@ public interface ChatMessageApi {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "채팅 메시지 조회 성공",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = FeedDetailResDto.class),
+							schema = @Schema(implementation = ChatMessageResDto.class),
 							examples = @ExampleObject(value =
 									"""
 									{

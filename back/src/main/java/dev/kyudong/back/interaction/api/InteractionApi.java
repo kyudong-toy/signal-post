@@ -1,6 +1,5 @@
 package dev.kyudong.back.interaction.api;
 
-import dev.kyudong.back.feed.api.dto.res.FeedDetailResDto;
 import dev.kyudong.back.interaction.api.dto.req.InteractionReqDto;
 import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.TargetType;
@@ -42,7 +41,7 @@ public interface InteractionApi {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "상호작용 성공",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = FeedDetailResDto.class),
+							schema = @Schema(implementation = InteractionResDto.class),
 							examples = @ExampleObject(value =
 									"""
 									{

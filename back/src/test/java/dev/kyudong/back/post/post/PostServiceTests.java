@@ -3,11 +3,12 @@ package dev.kyudong.back.post.post;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidInputException;
-import dev.kyudong.back.post.application.port.in.CategoryUsecase;
-import dev.kyudong.back.post.application.port.in.TagUsecase;
-import dev.kyudong.back.post.application.port.out.PostEventPublishPort;
-import dev.kyudong.back.post.application.port.out.PostPersistencePort;
-import dev.kyudong.back.post.application.service.PostService;
+import dev.kyudong.back.post.application.port.in.web.CategoryUsecase;
+import dev.kyudong.back.post.application.port.in.web.TagUsecase;
+import dev.kyudong.back.post.application.port.out.event.PostEventPublishPort;
+import dev.kyudong.back.post.application.port.out.event.PostViewEventPublishPort;
+import dev.kyudong.back.post.application.port.out.web.PostPersistencePort;
+import dev.kyudong.back.post.application.service.web.PostService;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
@@ -30,6 +31,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -67,6 +70,15 @@ public class PostServiceTests {
 	@Mock
 	private PostEventPublishPort postEventPublishPort;
 
+	@Mock
+	private PostViewEventPublishPort postViewEventPublishPort;
+
+	@Mock
+	private RedissonClient redissonClient;
+
+	@Mock
+	private RBloomFilter<Long> bloomFilter;
+
 	private static User createMockUser() {
 		User mockUser = User.builder()
 				.username("username")
@@ -78,9 +90,10 @@ public class PostServiceTests {
 	}
 
 	private static Post createMockPost(User mockUser, Category category) throws JsonProcessingException {
-		Post mockPost = Post.of("제목", createMockContent(), category);
+		Post mockPost = Post.create("제목", createMockContent(), category);
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
+		ReflectionTestUtils.setField(mockPost, "postViewCount", 0L);
 		ReflectionTestUtils.setField(mockPost, "createdAt", Instant.now());
 		ReflectionTestUtils.setField(mockPost, "modifiedAt", Instant.now());
 		return mockPost;
@@ -361,18 +374,57 @@ public class PostServiceTests {
 	}
 
 	@Test
-	@DisplayName("게시글 조회 - 성공")
-	void findPost_success() throws JsonProcessingException {
+	@DisplayName("사용자 게시글 조회 - 성공")
+	void findPost_withUser_success() throws JsonProcessingException {
 		// given
 		User mockUser = createMockUser();
 		final Long postId = 1L;
 		Category mockCategory = createMockCategory();
 		mockCategory.addTranslation("ko-KR", "일상(ko)");
 		Post mockPost = createMockPost(mockUser, mockCategory);
+
 		given(postPersistencePort.findByIdOrThrow(eq(postId))).willReturn(mockPost);
 
+		doNothing().when(postViewEventPublishPort).increasePostViewWithUser(any(User.class), any(Post.class));
+
+		doReturn(bloomFilter).when(redissonClient).getBloomFilter(anyString());
+		given(bloomFilter.add(anyLong())).willReturn(true);
+
+		given(userService.getUserProxy(999L)).willReturn(createMockUser());
+
 		// when
-		PostDetailResDto response = postService.findPostById(postId);
+		PostDetailResDto response = postService.findPostByIdWithUser(999L, mockPost.getId());
+
+		// then
+		then(postPersistencePort).should(times(1)).findByIdOrThrow(postId);
+		assertThat(response.postId()).isEqualTo(postId);
+		assertThat(response.subject()).isNotNull();
+		assertThat(response.content()).isNotNull();
+		assertThat(response.createdAt()).isNotNull();
+		assertThat(response.modifiedAt()).isNotNull();
+		assertThat(response.status()).isNotNull();
+	}
+
+	@Test
+	@DisplayName("게스트 게시글 조회 - 성공")
+	void findPost_withGuest_success() throws JsonProcessingException {
+		// given
+		User mockUser = createMockUser();
+		final Long postId = 1L;
+		Category mockCategory = createMockCategory();
+		mockCategory.addTranslation("ko-KR", "일상(ko)");
+		Post mockPost = createMockPost(mockUser, mockCategory);
+
+		given(postPersistencePort.findByIdOrThrow(eq(postId))).willReturn(mockPost);
+
+		String guestId = UUID.randomUUID().toString();
+		doNothing().when(postViewEventPublishPort).increasePostViewWithGuest(anyString(), any(Post.class));
+
+		doReturn(bloomFilter).when(redissonClient).getBloomFilter(anyString());
+		given(bloomFilter.add(anyLong())).willReturn(true);
+
+		// when
+		PostDetailResDto response = postService.findPostByIdWithGuest(guestId, postId);
 
 		// then
 		then(postPersistencePort).should(times(1)).findByIdOrThrow(postId);
@@ -386,13 +438,29 @@ public class PostServiceTests {
 
 	@Test
 	@DisplayName("게시글 조회 - 실패 : 존재하지 않는 게시글")
-	void findPost_fail_postNotFound() {
+	void findPost_withUser_fail_postNotFound() {
 		// given
+		User mockUser = createMockUser();
 		final Long postId = 1L;
 		given(postPersistencePort.findByIdOrThrow(eq(postId))).willThrow(new PostNotFoundException(postId));
 
 		// when && then
-		assertThatThrownBy(() -> postService.findPostById(postId))
+		assertThatThrownBy(() -> postService.findPostByIdWithUser(mockUser.getId(), postId))
+				.isInstanceOf(PostNotFoundException.class);
+	}
+
+	@Test
+	@DisplayName("게시글 조회 - 실패 : 존재하지 않는 게시글")
+	void findPost_withGuest_fail_postNotFound() {
+		// given
+		final Long postId = 1L;
+
+		String guestId = UUID.randomUUID().toString();
+
+		given(postPersistencePort.findByIdOrThrow(eq(postId))).willThrow(new PostNotFoundException(postId));
+
+		// when && then
+		assertThatThrownBy(() -> postService.findPostByIdWithGuest(guestId, postId))
 				.isInstanceOf(PostNotFoundException.class);
 	}
 

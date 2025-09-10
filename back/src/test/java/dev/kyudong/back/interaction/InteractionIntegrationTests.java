@@ -2,8 +2,8 @@ package dev.kyudong.back.interaction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.jwt.JwtUtil;
-import dev.kyudong.back.interaction.api.req.InteractionReqDto;
-import dev.kyudong.back.interaction.api.res.InteractionResDto;
+import dev.kyudong.back.interaction.api.dto.req.InteractionReqDto;
+import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.Interaction;
 import dev.kyudong.back.interaction.domain.InteractionType;
 import dev.kyudong.back.interaction.domain.TargetType;
@@ -68,7 +68,7 @@ public class InteractionIntegrationTests {
 	}
 
 	private Post createTestPost(User user) {
-		Post newPost = Post.of("제목", "", Category.builder().build());
+		Post newPost = Post.create("제목", "", Category.builder().build());
 		user.addPost(newPost);
 		return postRepository.save(newPost);
 	}

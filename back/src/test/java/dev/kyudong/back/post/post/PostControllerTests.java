@@ -2,9 +2,10 @@ package dev.kyudong.back.post.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.config.SecurityConfig;
+import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.in.web.PostController;
-import dev.kyudong.back.post.application.port.in.PostUsecase;
+import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.domain.dto.web.req.PostCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
@@ -16,6 +17,7 @@ import dev.kyudong.back.post.domain.entity.PostStatus;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
 import dev.kyudong.back.security.WithMockCustomUser;
 import dev.kyudong.back.user.exception.UserNotFoundException;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -80,31 +83,90 @@ public class PostControllerTests {
 	}
 
 	@Test
-	@DisplayName("게시글 조회 API - 성공")
-	void findPostByIdApi_success() throws Exception {
+	@DisplayName("사용자 게시글 조회 API - 성공")
+	@WithMockCustomUser(id = 999L)
+	void findPostByIdApi_withUser_success() throws Exception {
 		// given
+		final Long userId = 999L;
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
 		final Long postId = 1L;
-		PostDetailResDto response = new PostDetailResDto(postId, 1L, "Test", "Hello World!", PostStatus.NORMAL, LocalDateTime.now(), LocalDateTime.now());
-		given(postUsecase.findPostById(eq(postId))).willReturn(response);
+		PostDetailResDto response = new PostDetailResDto(
+				postId,
+				1L,
+				981L,
+				"Hello World!",
+				"content",
+				PostStatus.NORMAL,
+				LocalDateTime.now(),
+				LocalDateTime.now()
+		);
+		given(postUsecase.findPostByIdWithUser(eq(userId), eq(postId))).willReturn(response);
 
 		// when & then
-		mockMvc.perform(get("/api/v1/posts/{postId}", postId))
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.cookie(cookie))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.postId").value(postId))
-				.andExpect(jsonPath("$.subject").value("Test"))
-				.andExpect(jsonPath("$.content").value("Hello World!"))
 				.andDo(print());
 	}
 
 	@Test
-	@DisplayName("게시글 조회 API - 실패")
-	void findPostByIdApi_fail() throws Exception {
+	@DisplayName("게스트 게시글 조회 API - 성공")
+	void findPostByIdApi_withGuest_success() throws Exception {
 		// given
-		final Long postId = 999L;
-		given(postUsecase.findPostById(eq(postId))).willThrow(new PostNotFoundException(postId));
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
+		final Long postId = 1L;
+		PostDetailResDto response = new PostDetailResDto(
+				postId,
+				1L,
+				981L,
+				"Hello World!",
+				"test",
+				PostStatus.NORMAL,
+				LocalDateTime.now(),
+				LocalDateTime.now()
+		);
+		given(postUsecase.findPostByIdWithGuest(eq(guestId), eq(postId))).willReturn(response);
 
 		// when & then
-		mockMvc.perform(get("/api/v1/posts/{postId}", postId))
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.cookie(cookie))
+				.andExpect(status().isOk())
+				.andDo(print());
+	}
+
+	@Test
+	@DisplayName("사용자 게시글 조회 API - 실패")
+	@WithMockCustomUser(id = 999L)
+	void findPostByIdApi_withUser_fail() throws Exception {
+		// given
+		final Long userId = 999L;
+		final Long postId = 999L;
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
+		given(postUsecase.findPostByIdWithUser(eq(userId), eq(postId))).willThrow(new PostNotFoundException(postId));
+
+		// when & then
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.cookie(cookie))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.status").value(404))
+				.andDo(print());
+	}
+
+	@Test
+	@DisplayName("게스트 게시글 조회 API - 실패")
+	void findPostByIdApi_withGuest_fail() throws Exception {
+		// given
+		final Long postId = 999L;
+		final String guestId = UUID.randomUUID().toString();
+		Cookie cookie = new Cookie(GuestIdInterceptor.GUEST_ID_COOKIE_NAME, guestId);
+		given(postUsecase.findPostByIdWithGuest(eq(guestId), eq(postId))).willThrow(new PostNotFoundException(postId));
+
+		// when & then
+		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
+						.cookie(cookie))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.status").value(404))
 				.andDo(print());

@@ -83,7 +83,7 @@ public class NotificationEventHandlerTests {
 
 	private static Post makeMockPost(User mockUser) throws JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		Post mockPost = Post.of(
+		Post mockPost = Post.create(
 				"제목",
 				objectMapper.writeValueAsString(createMockTiptapContent()),
 				Category.builder().build()

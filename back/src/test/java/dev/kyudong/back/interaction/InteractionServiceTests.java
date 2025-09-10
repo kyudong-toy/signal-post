@@ -1,7 +1,7 @@
 package dev.kyudong.back.interaction;
 
-import dev.kyudong.back.interaction.api.req.InteractionReqDto;
-import dev.kyudong.back.interaction.api.res.InteractionResDto;
+import dev.kyudong.back.interaction.api.dto.req.InteractionReqDto;
+import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.Interaction;
 import dev.kyudong.back.interaction.domain.InteractionType;
 import dev.kyudong.back.interaction.domain.TargetType;
@@ -54,7 +54,7 @@ public class InteractionServiceTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.of("제목", "", Category.builder().build());
+		Post mockPost = Post.create("제목", "", Category.builder().build());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;

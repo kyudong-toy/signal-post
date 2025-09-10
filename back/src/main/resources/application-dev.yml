@@ -9,7 +9,7 @@ server:
 # ===================================================================
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/signalpost
+    url: jdbc:postgresql://localhost:5433/signalpost
     username: postgres
     password: 1234
     driver-class-name: org.postgresql.Driver
@@ -24,8 +24,6 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        show_sql: true
-        format_sql: true
         default_batch_fetch_size: 100 # N+1 문제 해결을 위한 배치 사이즈 설정 (성능 튜닝)
         jdbc:
           batch_size: 20
@@ -42,6 +40,7 @@ spring:
       host: localhost
       repositories:
         enabled: false
+      password: helloredis
 
 # ===================================================================
 # Springdoc (Swagger UI) Configuration
@@ -70,6 +69,8 @@ logging:
     dev.kyudong.back: DEBUG
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
+    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: DEBUG
+    net.ttddyy.dsproxy.listener.logging.SLF4JSlowQueryListener: WARN
 
 # ===================================================================
 # jwt Configuration
@@ -84,3 +85,19 @@ jwt:
 file:
   upload-dir: D:/toy/uploads # 서버 상황에 맞춰 설정
   public-web-path: /media/
+
+# ===================================================================
+# datasource-proxy Configuration
+# ===================================================================
+decorator:
+  datasource:
+    enabled: true
+    datasource-proxy:
+      json-format: true
+      logging: slf4j
+      multiline: true
+      query:
+        enable-logging: true
+      slow-query:
+        enable-logging: true
+        log-level: ERROR
