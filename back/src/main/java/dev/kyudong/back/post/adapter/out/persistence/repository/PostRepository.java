@@ -16,10 +16,22 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 	boolean existsById(Long postId);
 
-	@Query("SELECT MAX(p.id) AS max, MIN(p.id) AS min FROM Post p")
+	@Query("""
+ 		SELECT MAX(p.id) AS max, MIN(p.id) AS min 
+ 		FROM Post p
+	""")
 	Tuple findMaxAndMin();
 
-	@Query("SELECT p.id FROM Post p WHERE p.id IN :ids")
-	List<Long> findIdsByIdIn(@Param("ids") Set<Long> ids, Pageable pageable);
+	@Query("""
+ 		SELECT p.id 
+ 		FROM Post p 
+ 		WHERE p.id IN :ids
+ 		AND p.createdAt < :date
+	""")
+	List<Long> findIdsByIdIn(
+			@Param("ids") Set<Long> ids,
+			@Param("date") Instant date,
+			Pageable pageable
+	);
 
 }

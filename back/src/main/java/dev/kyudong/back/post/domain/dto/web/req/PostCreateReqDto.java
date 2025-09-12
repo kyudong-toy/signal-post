@@ -15,13 +15,9 @@ public record PostCreateReqDto(
 		@NotNull(message = "본문은 공백으로 올 수 없습니다.")
 		Object content,
 
-		@NotBlank(message = "카테고리가 선택되지 않았습니다")
-		String categoryCode,
-
 		@NotNull(message = "파일 아이디 목록은 NULL이 올 수 없습니다.")
 		Set<@NotNull(message = "파일 아이디는 NULL이 들어올 수 없습니다.") @Positive Long> fileIds,
 
-		@NotNull(message = "태그 목록이 비어있습니다")
 		Set<String> tags
 ) {
 }

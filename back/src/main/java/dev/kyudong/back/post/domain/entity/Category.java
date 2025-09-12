@@ -6,9 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Getter
@@ -35,8 +33,8 @@ public class Category {
 	@OneToMany(mappedBy = "parent")
 	private List<Category> children = new ArrayList<>();
 
-	@OneToMany(mappedBy = "category")
-	private List<Post> posts = new ArrayList<>();
+	@ManyToMany(mappedBy = "categories")
+	private Set<Post> posts = new HashSet<>();
 
 	@CreatedDate
 	@Column(name = "CREATED_AT", updatable = false)

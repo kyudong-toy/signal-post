@@ -5,6 +5,7 @@ import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.PostStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.res.*;
+import dev.kyudong.back.post.domain.entity.CommentSort;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,8 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Comment API의 명세를 정의하는 인터페이스입니다.
@@ -65,9 +65,12 @@ public interface CommentApi {
 					)
 			),
 	})
-	ResponseEntity<List<CommentDetailResDto>> findCommentsByPostId(
+	ResponseEntity<CommentListResDto> findCommentsByPostId(
 			@Parameter(name = "postId", description = "조회할 댓글의 게시글 ID", required = true, example = "1")
-			@PathVariable @Positive Long postId
+			@PathVariable @Positive Long postId,
+			@Parameter(name = "cursorId", description = "마지막 메시지 아이디")
+			@RequestParam(required = false) @Positive Long cursorId,
+			@RequestParam(required = false) CommentSort sort
 	);
 
 	@SuppressWarnings("unused")

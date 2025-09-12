@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.post.application.port.in.web.CategoryUsecase;
 import dev.kyudong.back.post.application.port.in.web.TagUsecase;
 import dev.kyudong.back.post.application.port.out.event.PostEventPublishPort;
 import dev.kyudong.back.post.application.port.out.event.PostViewEventPublishPort;
@@ -17,7 +16,6 @@ import dev.kyudong.back.post.domain.dto.web.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostDetailResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostUpdateResDto;
 import dev.kyudong.back.post.application.port.in.web.PostUsecase;
-import dev.kyudong.back.post.domain.entity.Category;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.domain.entity.PostStatus;
 import dev.kyudong.back.post.domain.entity.Tag;
@@ -43,7 +41,6 @@ public class PostService implements PostUsecase {
 	private final PostViewEventPublishPort postViewEventPublishPort;
 	private final PostPersistencePort postPersistencePort;
 	private final TagUsecase tagUsecase;
-	private final CategoryUsecase categoryUsecase;
 	private final RedissonClient redissonClient;
 
 	@Override
@@ -79,11 +76,9 @@ public class PostService implements PostUsecase {
 	public PostCreateResDto createPost(Long userId, PostCreateReqDto request) {
 		log.debug("게시글 생성을 시작합니다: userId={}, subject={}", userId, request.subject());
 
-		Category category = categoryUsecase.findByCategoryCode(request.categoryCode());
 		Post newPost = Post.create(
 				request.subject(),
-				conventContentJsonToString(request.content()),
-				category
+				conventContentJsonToString(request.content())
 		);
 		User user = userService.getUserProxy(userId);
 		user.addPost(newPost);
@@ -183,7 +178,7 @@ public class PostService implements PostUsecase {
 			return objectMapper.writeValueAsString(content);
 		} catch (JsonProcessingException j) {
 			log.error("게시글 본문 파싱에 실패했습니다");
-			log.debug("content={}", content);
+			log.debug("contents={}", content);
 			throw new RuntimeException("서버 에러 발생");
 		}
 	}

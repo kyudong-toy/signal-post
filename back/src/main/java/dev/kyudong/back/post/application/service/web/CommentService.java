@@ -1,17 +1,18 @@
 package dev.kyudong.back.post.application.service.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidInputException;
 import dev.kyudong.back.post.application.port.in.web.CommentUsecase;
 import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.application.port.out.web.CommentPersistencePort;
+import dev.kyudong.back.post.application.port.out.web.CommentQueryPort;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentDetailResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
+import dev.kyudong.back.post.domain.dto.web.res.*;
 import dev.kyudong.back.post.domain.entity.Comment;
+import dev.kyudong.back.post.domain.entity.CommentSort;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UserNotFoundException;
@@ -22,7 +23,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -30,24 +30,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommentService implements CommentUsecase {
 
+	private final ObjectMapper objectMapper;
 	private final UserRepository userRepository;
 	private final PostUsecase postUsecase;
 	private final CommentPersistencePort commentPersistencePort;
+	private final CommentQueryPort commentQueryPort;
 
-	@Override
 	@Transactional(readOnly = true)
-	public List<CommentDetailResDto> findCommentsByPostId(Long postId) {
+	public CommentListResDto findComments(Long postId, Long cursorId, CommentSort sort) {
 		log.debug("댓글 목록 조회 요청 시작: postId: {}", postId);
 
-		// List<Comment> commentList = commentRepository.findByPostId(postId);
+		List<Comment> commentList = sort.equals(CommentSort.NEW)
+			 ? commentQueryPort.findByNewCommentByCursor(postId, cursorId)
+			 : commentQueryPort.findByOldCommentByCursor(postId, cursorId);
 
-		// todo : 투두!
-		List<Comment> commentList = new ArrayList<>();
+		if (commentList.isEmpty()) {
+			return CommentListResDto.empty();
+		}
 
 		log.info("댓글 조회 요청 성공: postId: {}, size: {}", postId, commentList.size());
-		return commentList.stream()
-				.map(CommentDetailResDto::from)
-				.toList();
+		return CommentListResDto.from(commentList);
 	}
 
 	@Override
@@ -62,8 +64,9 @@ public class CommentService implements CommentUsecase {
 		User user = userRepository.getReferenceById(userId);
 
 		Post post = postUsecase.getPostEntityOrThrow(postId);
+		String content = conventContentJsonToString(request.content());
 		Comment newComment = Comment.builder()
-				.content(request.content())
+				.content(content)
 				.user(user)
 				.build();
 		post.addComment(newComment);
@@ -83,7 +86,8 @@ public class CommentService implements CommentUsecase {
 
 		validatePermission(comment.getUser().getId(), userId, commentId);
 
-		comment.updateContent(request.content());
+		String content = conventContentJsonToString(request.content());
+		comment.updateContent(content);
 
 		log.info("댓글 수정 요청 성공: postId: {}, commentId: {}", postId, commentId);
 		return CommentUpdateResDto.from(comment);
@@ -125,5 +129,19 @@ public class CommentService implements CommentUsecase {
 		}
 	}
 
+	/**
+	 * 에디터 본문(Object)를 String으로 변환합니다.
+	 * @param content	에디터 본문 내용
+	 * @return String	변환된 본문
+	 */
+	private String conventContentJsonToString(Object content) {
+		try {
+			return objectMapper.writeValueAsString(content);
+		} catch (JsonProcessingException j) {
+			log.error("게시글 본문 파싱에 실패했습니다");
+			log.debug("contents={}", content);
+			throw new RuntimeException("서버 에러 발생");
+		}
+	}
 
 }

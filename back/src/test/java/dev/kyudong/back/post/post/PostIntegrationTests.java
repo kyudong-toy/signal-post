@@ -12,14 +12,11 @@ import dev.kyudong.back.post.domain.dto.web.req.PostUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostCreateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostUpdateResDto;
 import dev.kyudong.back.post.domain.entity.*;
-import dev.kyudong.back.post.adapter.out.persistence.repository.CategoryRepository;
-import dev.kyudong.back.post.adapter.out.persistence.repository.CategoryTranslationRepository;
 import dev.kyudong.back.post.adapter.out.persistence.repository.PostRepository;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
@@ -54,43 +51,10 @@ public class PostIntegrationTests extends IntegrationTestBase {
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
-	private CategoryRepository categoryRepository;
-
-	@Autowired
-	private CategoryTranslationRepository categoryTranslationRepository;
-
-	@Autowired
 	private TagRepository tagRepository;
 
 	@Autowired
 	private JwtUtil jwtUtil;
-
-	@BeforeEach
-	void setUp() {
-		Category category1 = Category.builder()
-				.categoryCode("test_1")
-				.build();
-		categoryRepository.save(category1);
-
-		CategoryTranslation translation1_ko = CategoryTranslation.builder()
-				.category(category1)
-				.languageCode("ko-KR")
-				.name("일상(ko)")
-				.build();
-		categoryTranslationRepository.save(translation1_ko);
-
-		Category category2 = Category.builder()
-				.categoryCode("test_2")
-				.build();
-		categoryRepository.save(category2);
-
-		CategoryTranslation translation2_ko = CategoryTranslation.builder()
-				.category(category2)
-				.languageCode("ko-KR")
-				.name("IT(ko)")
-				.build();
-		categoryTranslationRepository.save(translation2_ko);
-	}
 
 	private User createTestUser() {
 		User newUser = User.builder()
@@ -109,12 +73,12 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		Map<String, Object> paragraphNode = Map.of(
 				"type", "paragraph",
-				"content", List.of(textNode)
+				"contents", List.of(textNode)
 		);
 
 		Map<String, Object> map = Map.of(
 				"type", "doc",
-				"content", List.of(paragraphNode)
+				"contents", List.of(paragraphNode)
 		);
 
 		return new ObjectMapper().writeValueAsString(map);
@@ -124,12 +88,10 @@ public class PostIntegrationTests extends IntegrationTestBase {
 	@DisplayName("사용자 게시글 조회 API")
 	void findPostById_withUser() throws Exception {
 		// given
-		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
 		Post newPost = Post.create(
 				"제목",
-				createMockTiptapContent(),
-				category
+				createMockTiptapContent()
 		);
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
@@ -151,12 +113,10 @@ public class PostIntegrationTests extends IntegrationTestBase {
 	@DisplayName("게스트 게시글 조회 API")
 	void findPostById_withGuest() throws Exception {
 		// given
-		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
 		Post newPost = Post.create(
 				"제목",
-				createMockTiptapContent(),
-				category
+				createMockTiptapContent()
 		);
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
@@ -182,7 +142,6 @@ public class PostIntegrationTests extends IntegrationTestBase {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				createMockTiptapContent(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -220,7 +179,6 @@ public class PostIntegrationTests extends IntegrationTestBase {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				createMockTiptapContent(),
-				"test_1",
 				new HashSet<>(),
 				Set.of("새로운태그", "기존태그")
 		);
@@ -257,12 +215,10 @@ public class PostIntegrationTests extends IntegrationTestBase {
 	@DisplayName("게시글 수정 API")
 	void updatePost() throws Exception {
 		// given
-		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
 		Post newPost = Post.create(
 				"제목",
-				createMockTiptapContent(),
-				category
+				createMockTiptapContent()
 		);
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);
@@ -270,7 +226,6 @@ public class PostIntegrationTests extends IntegrationTestBase {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"Test",
 				createMockTiptapContent(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -296,12 +251,10 @@ public class PostIntegrationTests extends IntegrationTestBase {
 	@DisplayName("게시글 상태 수정 API")
 	void updatePostStatus() throws Exception {
 		// given
-		Category category = categoryRepository.findByCategoryCode("test_1").orElseThrow();
 		User user = createTestUser();
 		Post newPost = Post.create(
 				"제목",
-				createMockTiptapContent(),
-				category
+				createMockTiptapContent()
 		);
 		user.addPost(newPost);
 		Post savedPost = postRepository.save(newPost);

@@ -143,7 +143,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 				Query query = em.createNativeQuery(sql);
 				query.setParameter("userId", author.getId());
 				query.setParameter("subject", "오래된 게시글 " + i);
-				query.setParameter("content", "{\"text\": \"오래된 게시글 본문 " + i + "\"}");
+				query.setParameter("contents", "{\"text\": \"오래된 게시글 본문 " + i + "\"}");
 				query.setParameter("status", PostStatus.NORMAL.name());
 				query.setParameter("viewCount", ThreadLocalRandom.current().nextLong(0, 500));
 				query.setParameter("score", ThreadLocalRandom.current().nextDouble(-50, 200));
@@ -159,7 +159,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 				Query query = em.createNativeQuery(sql);
 				query.setParameter("userId", author.getId());
 				query.setParameter("subject", "인기 게시글 " + i);
-				query.setParameter("content", "{\"text\": \"인기 게시글 본문 " + i + "\"}");
+				query.setParameter("contents", "{\"text\": \"인기 게시글 본문 " + i + "\"}");
 				query.setParameter("status", PostStatus.NORMAL.name());
 				query.setParameter("viewCount", ThreadLocalRandom.current().nextLong(500, 5000));
 				query.setParameter("score", ThreadLocalRandom.current().nextDouble(100, 400));
@@ -174,7 +174,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 				Query query = em.createNativeQuery(sql);
 				query.setParameter("userId", follower.getId());
 				query.setParameter("subject", "팔로우 게시글 " + i);
-				query.setParameter("content", "{\"text\": \"팔로우 게시글 본문 " + i + "\"}");
+				query.setParameter("contents", "{\"text\": \"팔로우 게시글 본문 " + i + "\"}");
 				query.setParameter("status", PostStatus.NORMAL.name());
 				query.setParameter("viewCount", ThreadLocalRandom.current().nextLong(0, 500));
 				query.setParameter("score", ThreadLocalRandom.current().nextDouble(-50, 200));
@@ -190,7 +190,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 				Query query = em.createNativeQuery(sql);
 				query.setParameter("userId", author.getId());
 				query.setParameter("subject", "최신 게시글 " + i);
-				query.setParameter("content", "{\"text\": \"최신 게시글 본문 " + i + "\"}");
+				query.setParameter("contents", "{\"text\": \"최신 게시글 본문 " + i + "\"}");
 				query.setParameter("status", PostStatus.NORMAL.name());
 				query.setParameter("viewCount", ThreadLocalRandom.current().nextLong(10, 1000));
 				query.setParameter("score", ThreadLocalRandom.current().nextDouble(-50, 50));

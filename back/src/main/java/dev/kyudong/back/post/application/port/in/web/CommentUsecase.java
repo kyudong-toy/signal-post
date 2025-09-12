@@ -3,16 +3,12 @@ package dev.kyudong.back.post.application.port.in.web;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentDetailResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
-
-import java.util.List;
+import dev.kyudong.back.post.domain.dto.web.res.*;
+import dev.kyudong.back.post.domain.entity.CommentSort;
 
 public interface CommentUsecase {
 
-	List<CommentDetailResDto> findCommentsByPostId(Long postId);
+	CommentListResDto findComments(Long postId, Long cursorId, CommentSort sort);
 
 	CommentCreateResDto createComment(Long postId, Long userId, CommentCreateReqDto request);
 

@@ -44,9 +44,13 @@ public class Post {
 	@Column(name = "POST_SCORE")
 	private double score;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "CATEGORY_ID", nullable = false)
-	private Category category;
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@JoinTable(
+			name = "POST_CATEGORY",
+			joinColumns = @JoinColumn(name = "POST_ID"),
+			inverseJoinColumns = @JoinColumn(name = "CATEGORY_ID")
+	)
+	private Set<Category> categories = new HashSet<>();
 
 	@ManyToMany(
 			fetch = FetchType.LAZY,
@@ -73,19 +77,18 @@ public class Post {
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "post")
 	private List<Comment> commentList = new ArrayList<>();
 
-	private Post(String subject, String content, Category category) {
+	private Post(String subject, String content) {
 		validSubject(subject);
 		validContent(content);
 		this.subject = subject;
 		this.content = content;
-		this.category = category;
 		this.status = PostStatus.NORMAL;
 		this.viewCount = 0L;
 		this.score = 100.0D;
 	}
 
-	public static Post create(String subject, String content, Category category) {
-		return new Post(subject, content, category);
+	public static Post create(String subject, String content) {
+		return new Post(subject, content);
 	}
 
 	public void updateSubject(String subject) {
@@ -135,10 +138,6 @@ public class Post {
 	 */
 	public void associateUser(User user) {
 		this.user = user;
-	}
-
-	public void associateCategory(Category category) {
-		this.category = category;
 	}
 
 	public void addComment(@NonNull Comment comment) {

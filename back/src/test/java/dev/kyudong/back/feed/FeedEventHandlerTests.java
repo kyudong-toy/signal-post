@@ -6,7 +6,6 @@ import dev.kyudong.back.feed.repository.FeedRepository;
 import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
 import dev.kyudong.back.post.domain.dto.event.PostCreateFeedEvent;
-import dev.kyudong.back.post.domain.entity.Category;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +47,7 @@ public class FeedEventHandlerTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.create("제목", "", Category.builder().build());
+		Post mockPost = Post.create("제목", "");
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
