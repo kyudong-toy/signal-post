@@ -90,7 +90,7 @@ public class PostServiceTests {
 	}
 
 	private static Post createMockPost(User mockUser, Category category) throws JsonProcessingException {
-		Post mockPost = Post.create("제목", createMockContent(), category);
+		Post mockPost = Post.create("제목", createMockContent());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		ReflectionTestUtils.setField(mockPost, "postViewCount", 0L);
@@ -115,12 +115,12 @@ public class PostServiceTests {
 
 		Map<String, Object> paragraphNode = Map.of(
 				"type", "paragraph",
-				"content", List.of(textNode)
+				"contents", List.of(textNode)
 		);
 
 		Map<String, Object> map = Map.of(
 				"type", "doc",
-				"content", List.of(paragraphNode)
+				"contents", List.of(paragraphNode)
 		);
 
 		return new ObjectMapper().writeValueAsString(map);
@@ -134,12 +134,12 @@ public class PostServiceTests {
 
 		Map<String, Object> paragraphNode = Map.of(
 				"type", "paragraph",
-				"content", List.of(textNode)
+				"contents", List.of(textNode)
 		);
 
 		return Map.of(
 				"type", "doc",
-				"content", List.of(paragraphNode)
+				"contents", List.of(paragraphNode)
 		);
 	}
 
@@ -158,7 +158,6 @@ public class PostServiceTests {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				content,
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -196,7 +195,6 @@ public class PostServiceTests {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				content,
-				"test_1",
 				new HashSet<>(),
 				Set.of("새로운태그", "기존태그")
 		);
@@ -244,7 +242,6 @@ public class PostServiceTests {
 		PostCreateReqDto request = new PostCreateReqDto(
 				invalidSubject,
 				createMockContentObject(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -263,7 +260,6 @@ public class PostServiceTests {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"newSubject",
 				createMockContentObject(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -295,7 +291,6 @@ public class PostServiceTests {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"newSubject",
 				createMockContentObject(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -316,7 +311,6 @@ public class PostServiceTests {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"newSubject",
 				createMockContentObject(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);

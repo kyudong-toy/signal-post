@@ -64,7 +64,36 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 	}
 
 	@Override
-	public List<PostFeedDto> findRecentPostsWithUser(Long userId, Instant now, int size) {
+	public List<PostFeedDto> findPreviewPosts(Long userId, int size) {
+		return queryFactory
+				.select(POST_FEED_DTO_PROJECTION)
+				.from(p)
+				.leftJoin(c).on(c.post.eq(p))
+				.where(
+						p.user.id.ne(userId),
+						p.status.eq(PostStatus.NORMAL)
+				)
+				.groupBy(getGroupByFields())
+				.orderBy(p.createdAt.desc())
+				.limit(size)
+				.fetch();
+	}
+
+	@Override
+	public List<PostFeedDto> findPreviewPosts(int size) {
+		return queryFactory
+				.select(POST_FEED_DTO_PROJECTION)
+				.from(p)
+				.leftJoin(c).on(c.post.eq(p))
+				.where(p.status.eq(PostStatus.NORMAL))
+				.groupBy(getGroupByFields())
+				.orderBy(p.createdAt.desc())
+				.limit(size)
+				.fetch();
+	}
+
+	@Override
+	public List<PostFeedDto> findRecentPosts(Long userId, Instant now, int size) {
 		return queryFactory
 				.select(POST_FEED_DTO_PROJECTION)
 				.from(p)
@@ -72,7 +101,7 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 				.where(
 						p.user.id.ne(userId),
 						p.status.eq(PostStatus.NORMAL),
-						p.createdAt.lt(now)
+						p.createdAt.goe(now)
 				)
 				.groupBy(getGroupByFields())
 				.orderBy(p.createdAt.desc())
@@ -81,14 +110,14 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 	}
 
 	@Override
-	public List<PostFeedDto> findRecentPostsWithGuest(Instant now, int size) {
+	public List<PostFeedDto> findRecentPosts(Instant now, int size) {
 		return queryFactory
 				.select(POST_FEED_DTO_PROJECTION)
 				.from(p)
 				.leftJoin(c).on(c.post.eq(p))
 				.where(
 						p.status.eq(PostStatus.NORMAL),
-						p.createdAt.lt(now)
+						p.createdAt.goe(now)
 				)
 				.groupBy(getGroupByFields())
 				.orderBy(p.createdAt.desc())
@@ -97,7 +126,7 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 	}
 
 	@Override
-	public List<PostFeedDto> findPopularPostsWithUser(Long userId, Instant now, int size) {
+	public List<PostFeedDto> findPopularPosts(Long userId, Instant now, int size) {
 		return queryFactory
 				.select(POST_FEED_DTO_PROJECTION)
 				.from(p)
@@ -114,7 +143,7 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 	}
 
 	@Override
-	public List<PostFeedDto> findPopularPostsWithGuest(Instant now, int size) {
+	public List<PostFeedDto> findPopularPosts(Instant now, int size) {
 		return queryFactory
 				.select(POST_FEED_DTO_PROJECTION)
 				.from(p)
@@ -130,7 +159,7 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 	}
 
 	@Override
-	public List<PostFeedDto> findByFollowingPost(Long userId, Instant now, int size) {
+	public List<PostFeedDto> findByFollowingPost(Long userId, int size) {
 		JPQLQuery<User> followingSubquery = JPAExpressions
 				.select(f.following)
 				.from(f)
@@ -140,13 +169,26 @@ public class PostFeedQueryAdapter implements PostFeedQueryPort {
 				.select(POST_FEED_DTO_PROJECTION)
 				.from(p)
 				.leftJoin(c).on(c.post.eq(p))
-				.where(
-						p.user.in(followingSubquery),
-						p.createdAt.lt(now)
-				)
+				.where(p.user.in(followingSubquery))
 				.groupBy(getGroupByFields())
 				.orderBy(p.score.desc(), p.createdAt.desc())
 				.limit(size)
+				.fetch();
+	}
+
+	@Override
+	public List<PostFeedDto> findAllByIds(Long userId, Set<Long> postIds) {
+		return queryFactory
+				.select(POST_FEED_DTO_PROJECTION)
+				.from(p)
+				.leftJoin(c).on(c.post.eq(p))
+				.where(
+						p.user.id.ne(userId),
+						p.status.eq(PostStatus.NORMAL),
+						p.id.in(postIds)
+				)
+				.groupBy(getGroupByFields())
+				.orderBy(p.score.desc())
 				.fetch();
 	}
 

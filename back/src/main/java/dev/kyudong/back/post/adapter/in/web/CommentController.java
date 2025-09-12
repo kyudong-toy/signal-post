@@ -4,10 +4,8 @@ import dev.kyudong.back.post.application.port.in.web.CommentUsecase;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentDetailResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
+import dev.kyudong.back.post.domain.dto.web.res.*;
+import dev.kyudong.back.post.domain.entity.CommentSort;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -29,8 +27,12 @@ public class CommentController implements CommentApi {
 
 	@Override
 	@GetMapping
-	public ResponseEntity<List<CommentDetailResDto>> findCommentsByPostId(@PathVariable @Positive final Long postId) {
-		return ResponseEntity.ok(commentUsecase.findCommentsByPostId(postId));
+	public ResponseEntity<CommentListResDto> findCommentsByPostId(
+			@PathVariable @Positive final Long postId,
+			@RequestParam(required = false) @Positive Long cursorId,
+			@RequestParam(required = false) CommentSort sort
+	) {
+		return ResponseEntity.ok(commentUsecase.findComments(postId, cursorId, sort));
 	}
 
 	@Override

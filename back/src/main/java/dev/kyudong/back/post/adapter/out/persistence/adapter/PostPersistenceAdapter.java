@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +60,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 		Long min = Optional.of(maxAndMin.get("min", Long.class)).orElse(0L);
 
 		if (max == 0L || min == 0L || min >= max) {
-			log.info("게시물이 부족하여 추출할 수 없습니다: max={}, min={}", max, min);
+			log.info("게시물가 부족하여 추출을 중지합니다: max={}, min={}", max, min);
 			return;
 		}
 
@@ -71,7 +73,8 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 				.collect(Collectors.toSet());
 		Pageable pageable = PageRequest.of(0, sampleSize);
 
-		List<Long> existingIds = postRepository.findIdsByIdIn(randomIds, pageable);
+		Instant date = Instant.now().minus(6, ChronoUnit.MONTHS);
+		List<Long> existingIds = postRepository.findIdsByIdIn(randomIds, date, pageable);
 		if (existingIds.isEmpty()) {
 			log.debug("게시글을 찾을 수 없어 생성을 중단합니다");
 			return;

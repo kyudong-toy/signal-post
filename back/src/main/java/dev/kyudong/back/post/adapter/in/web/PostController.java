@@ -32,8 +32,8 @@ public class PostController implements PostApi {
 	public ResponseEntity<PostDetailResDto> findPostById(
 			@PathVariable @Positive Long postId,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId) {
-
+			@RequestAttribute(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId)
+	{
 		boolean isLoggedIn = userPrincipal != null;
 
 		PostDetailResDto response = isLoggedIn

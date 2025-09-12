@@ -7,10 +7,9 @@ import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentDetailResDto;
+import dev.kyudong.back.post.domain.dto.web.res.CommentItemResDto;
 import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
-import dev.kyudong.back.post.domain.entity.Category;
 import dev.kyudong.back.post.domain.entity.Comment;
 import dev.kyudong.back.post.domain.entity.CommentStatus;
 import dev.kyudong.back.post.domain.entity.Post;
@@ -73,7 +72,7 @@ public class CommentIntegrationTests {
 	}
 
 	private Post createTestPost(User user) {
-		Post newPost = Post.create("제목", "", Category.builder().build());
+		Post newPost = Post.create("제목", "");
 		user.addPost(newPost);
 		return postRepository.save(newPost);
 	}
@@ -104,7 +103,7 @@ public class CommentIntegrationTests {
 
 		// then
 		String responseBody = result.getResponse().getContentAsString();
-		List<CommentDetailResDto> response = objectMapper.readValue(responseBody, new TypeReference<>() {});
+		List<CommentItemResDto> response = objectMapper.readValue(responseBody, new TypeReference<>() {});
 		assertThat(response.size()).isEqualTo(2);
 		assertThat(response.get(0).content()).isEqualTo("댓글1");
 	}

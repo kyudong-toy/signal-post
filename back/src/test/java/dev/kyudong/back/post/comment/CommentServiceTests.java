@@ -4,15 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.exception.InvalidAccessException;
 import dev.kyudong.back.common.exception.InvalidInputException;
+import dev.kyudong.back.post.application.port.in.web.PostUsecase;
+import dev.kyudong.back.post.application.port.out.web.CommentPersistencePort;
+import dev.kyudong.back.post.application.port.out.web.CommentQueryPort;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentDetailResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
-import dev.kyudong.back.post.domain.entity.Category;
+import dev.kyudong.back.post.domain.dto.web.res.*;
 import dev.kyudong.back.post.domain.entity.Comment;
+import dev.kyudong.back.post.domain.entity.CommentSort;
 import dev.kyudong.back.post.domain.entity.CommentStatus;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTests {
@@ -58,6 +60,15 @@ public class CommentServiceTests {
 
 	@InjectMocks
 	private CommentService commentService;
+
+	@Mock
+	private CommentQueryPort commentQueryPort;
+
+	@Mock
+	private PostUsecase postUsecase;
+
+	@Mock
+	private CommentPersistencePort commentPersistencePort;
 
 	private static User makeMockUser() {
 		User mockUser = User.builder()
@@ -77,19 +88,19 @@ public class CommentServiceTests {
 
 		Map<String, Object> paragraphNode = Map.of(
 				"type", "paragraph",
-				"content", List.of(textNode)
+				"contents", List.of(textNode)
 		);
 
 		Map<String, Object> map = Map.of(
 				"type", "doc",
-				"content", List.of(paragraphNode)
+				"contents", List.of(paragraphNode)
 		);
 
 		return new ObjectMapper().writeValueAsString(map);
 	}
 
 	private static Post makeMockPost(User mockUser) throws JsonProcessingException {
-		Post mockPost = Post.create("제목", createMockTiptapContent(), Category.builder().build());
+		Post mockPost = Post.create("제목", createMockTiptapContent());
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
@@ -326,33 +337,32 @@ public class CommentServiceTests {
 	}
 
 	@Test
-	@DisplayName("댓글 목록 조회 - 성공")
-	void findCommentsByPostId_success() throws JsonProcessingException {
+	@DisplayName("최신 댓글 목록 첫 조회 - 성공")
+	void findNewCommentsByPostId_success() throws JsonProcessingException {
 		// given
 		User mockUser = makeMockUser();
 		Post mockPost = makeMockPost(mockUser);
 
 		// 댓글 생성
-		Comment mockComment1 = makeMockComment(mockPost, mockUser);
-		ReflectionTestUtils.setField(mockComment1, "id", 1L);
-		mockPost.addComment(mockComment1);
-		Comment mockComment2 = makeMockComment(mockPost, mockUser);
-		ReflectionTestUtils.setField(mockComment2, "id", 2L);
-		mockPost.addComment(mockComment2);
-		Comment mockComment3 = makeMockComment(mockPost, mockUser);
-		ReflectionTestUtils.setField(mockComment3, "id", 3L);
-		mockPost.addComment(mockComment3);
+		List<Comment> list = new ArrayList<>();
+		for (int i = 1; i <= 100; i++) {
+			Comment mockComment = makeMockComment(mockPost, mockUser);
+			ReflectionTestUtils.setField(mockComment, "id", (long) i);
+			mockPost.addComment(mockComment);
+			list.add(mockComment);
+		}
 
-		List<Comment> commentList = List.of(mockComment1, mockComment2, mockComment3);
-		when(commentRepository.findByPostId(eq(mockPost.getId()))).thenReturn(commentList);
+		given(commentQueryPort.findByNewCommentByCursor(mockPost.getId(), null))
+				.willReturn(list);
 
 		// when
-		List<CommentDetailResDto> response = commentService.findCommentsByPostId(mockPost.getId());
+		CommentListResDto response = commentService.findComments(mockPost.getId(), null, CommentSort.NEW);
 
 		// then
-		assertThat(response.size()).isEqualTo(commentList.size());
-		assertThat(response.get(0).commentId()).isEqualTo(commentList.get(0).getId());
-		verify(commentRepository, times(1)).findByPostId(eq(mockPost.getId()));
+		assertThat(response.comments().size()).isEqualTo(20);
+		assertThat(response.hasNext()).isTrue();
+		then(commentQueryPort).should().findByNewCommentByCursor(anyLong(), isNull());
+		then(commentQueryPort).should(never()).findByOldCommentByCursor(anyLong(), anyLong());
 	}
 
 }

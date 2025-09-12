@@ -11,15 +11,21 @@ import java.util.Set;
  */
 public interface PostFeedQueryPort {
 
-	List<PostFeedDto> findRecentPostsWithUser(Long userId, Instant now, int size);
+	List<PostFeedDto> findPreviewPosts(Long userId, int size);
 
-	List<PostFeedDto> findRecentPostsWithGuest(Instant now, int size);
+	List<PostFeedDto> findPreviewPosts(int size);
 
-	List<PostFeedDto> findPopularPostsWithUser(Long userId, Instant now, int size);
+	List<PostFeedDto> findRecentPosts(Long userId, Instant now, int size);
 
-	List<PostFeedDto> findPopularPostsWithGuest(Instant now, int size);
+	List<PostFeedDto> findRecentPosts(Instant now, int size);
 
-	List<PostFeedDto> findByFollowingPost(Long userId, Instant now, int size);
+	List<PostFeedDto> findPopularPosts(Long userId, Instant now, int size);
+
+	List<PostFeedDto> findPopularPosts(Instant now, int size);
+
+	List<PostFeedDto> findByFollowingPost(Long userId, int size);
+
+	List<PostFeedDto> findAllByIds(Long userId, Set<Long> postIds);
 
 	List<PostFeedDto> findAllByIds(Set<Long> postIds);
 

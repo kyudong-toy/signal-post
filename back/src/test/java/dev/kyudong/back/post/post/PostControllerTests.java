@@ -73,12 +73,12 @@ public class PostControllerTests {
 
 		Map<String, Object> paragraphNode = Map.of(
 				"type", "paragraph",
-				"content", List.of(textNode)
+				"contents", List.of(textNode)
 		);
 
 		return Map.of(
 				"type", "doc",
-				"content", List.of(paragraphNode)
+				"contents", List.of(paragraphNode)
 		);
 	}
 
@@ -96,7 +96,7 @@ public class PostControllerTests {
 				1L,
 				981L,
 				"Hello World!",
-				"content",
+				"contents",
 				PostStatus.NORMAL,
 				LocalDateTime.now(),
 				LocalDateTime.now()
@@ -182,7 +182,6 @@ public class PostControllerTests {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				content,
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -210,7 +209,6 @@ public class PostControllerTests {
 		PostCreateReqDto request = new PostCreateReqDto(
 				"subject",
 				content,
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -236,7 +234,6 @@ public class PostControllerTests {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"Test",
 				createMockTiptapContent(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
@@ -263,7 +260,6 @@ public class PostControllerTests {
 		PostUpdateReqDto request = new PostUpdateReqDto(
 				"Test",
 				createMockTiptapContent(),
-				"test_1",
 				new HashSet<>(),
 				new HashSet<>()
 		);
