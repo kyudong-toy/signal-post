@@ -63,10 +63,8 @@ public interface NotificationApi {
 	ResponseEntity<NotificationResDto> findNotifications(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@Parameter(name = "lastFeedId", description = "마지막으로 조회한 알림의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")
-			@RequestParam(required = false) Long lastFeedId,
-			@Parameter(name = "size", description = "한 페이지에 불러올 알림 개수", example = "10")
-			@RequestParam(defaultValue = "10") @Positive int size
+			@Parameter(name = "cursorId", description = "마지막으로 조회한 알림의 아이디 (두 번째 페이지부터 사용됩니다)", example = "1")
+			@RequestParam(required = false) Long cursorId
 	);
 
 	@SuppressWarnings("unused")
@@ -82,7 +80,7 @@ public interface NotificationApi {
 										"type": "about:blank",
 										"title": "Notification Not Found",
 										"status": 404,
-										"detail": "조회를 요청한 알림이 존재하지 않습니다: notificationId=1",
+										"detail": "조회를 요청한 알림이 존재하지 않습니다: id=1",
 										"instance": "/api/v1/notification/1",
 										"timestamp": "2025-08-16T16:20:22.367368100Z"
 									}
@@ -94,7 +92,7 @@ public interface NotificationApi {
 	ResponseEntity<Void> readNotification(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@Parameter(name = "notificationId", description = "조회할 알림 고유 아이디")
+			@Parameter(name = "id", description = "조회할 알림 고유 아이디")
 			@PathVariable @Positive Long notificationId
 	);
 
@@ -106,7 +104,7 @@ public interface NotificationApi {
 	ResponseEntity<Void> deleteNotification(
 			@Parameter(hidden = true, description = "로그인 사용자의 정보")
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@Parameter(name = "notificationId", description = "조회할 알림 고유 아이디")
+			@Parameter(name = "id", description = "조회할 알림 고유 아이디")
 			@PathVariable @Positive Long notificationId
 	);
 

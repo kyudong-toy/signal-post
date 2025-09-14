@@ -10,10 +10,10 @@ interface EditorProps {
 }
 
 const PostEditor = ({data, onChange, holder}: EditorProps) => {
-  // Editor.js 인스턴스를 저장하기 위한 ref
+  // BaseEditor.js 인스턴스를 저장하기 위한 ref
   const ref = useRef<EditorJS | null>(null);
 
-  // 컴포넌트가 마운트될 때 Editor.js를 초기화합니다.
+  // 컴포넌트가 마운트될 때 BaseEditor.js를 초기화합니다.
   useEffect(() => {
     // 인스턴스가 없으면 새로 생성
     if (!ref.current) {

@@ -1,5 +1,4 @@
 import {z} from "zod";
-import type {OutputData} from "@editorjs/editorjs";
 
 export interface PostEntity {
   postId: number;
@@ -11,25 +10,17 @@ export interface PostEntity {
   modifiedAt: string;
 }
 
-export type PostContent = OutputData;
-
-export const postCreateSchema = z.object({
+export const postRequestSchema = z.object({
   subject: z.string()
     .trim()
     .min(1, '제목은 공백으로 입력할 수 없습니다')
     .max(100, '제목은 100글자를 초과할 수 없습니다'),
-  content: z.object({
-    time: z.number().optional(),
-    blocks: z.array(z.any()),
-    version: z.string().optional()
-  }).refine(
-    (data) => data.blocks.length > 0,
-    '본문은 공백으로 올 수 없습니다'
-  ),
-  fileIds: z.array(z.number().positive("유효하지 못한 파일입니다"))
+  content: z.any(),
+  fileIds: z.array(z.number().positive("유효하지 못한 파일입니다")),
+  tags: z.array(z.string().min(1, "잘못된 태그입니다"))
 });
 
-export type PostCreateReq = z.infer<typeof postCreateSchema>;
+export type PostCreateReq = z.infer<typeof postRequestSchema>;
 
 export interface PostCreateRes {
   postId: number;
@@ -39,11 +30,7 @@ export interface PostCreateRes {
   modifiedAt: string;
 }
 
-export const postUpdateSchema = postCreateSchema.extend({
-  delFileIds: z.array(z.number().positive("유효하지 못한 파일입니다"))
-});
-
-export type PostUpdateReq = z.infer<typeof postUpdateSchema>;
+export type PostUpdateReq = z.infer<typeof postRequestSchema>;
 
 export interface PostUpdateRes {
   postId: number;

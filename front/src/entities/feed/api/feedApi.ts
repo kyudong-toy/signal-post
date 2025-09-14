@@ -1,19 +1,10 @@
-import type {FeedEntity} from "@/entities/feed";
-import axiosClient from "@/shared/axios";
+import axiosClient from "../../../shared/axios";
+import type {FeedEntity} from "../model/types.ts";
 
-interface FeedFindVariables {
-  lastFeedId?: number | null,
-  size: number | 10
-}
-
-export const findFeeds = async ({lastFeedId, size}: FeedFindVariables): Promise<FeedEntity> => {
+export const findFeeds = async (page:number): Promise<FeedEntity> => {
   const params: Record<string, string | number> = {
-    size: size,
+    page: page,
   };
-
-  if (lastFeedId) {
-    params.lastFeedId = lastFeedId;
-  }
 
   const response = await axiosClient.get(`/feeds`, {params});
   return response.data;

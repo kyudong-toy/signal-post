@@ -1,101 +1,67 @@
-import {create} from 'zustand';
-import {Client} from '@stomp/stompjs';
+import { create } from 'zustand';
+import { persist } from "zustand/middleware";
 
 interface AuthState {
   accessToken: string | null;
-  isStompConnected: boolean;
-  stompClient: Client | null;
+  user: {
+    id: number;
+    username: string;
+  } | null;
+  isAuthenticated: boolean;
+
   setAccessToken: (token: string) => void;
-  setStompConnected: (connected: boolean) => void;
+  setUser: (user: AuthState['user']) => void;
   clearAuth: () => void;
-  subscribe: (destination: string, callback: (message: any) => void) => void;
-  unsubscribe: (destination: string) => void;
-  sendMessage: (destination: string, body: any) => void;
+  isTokenValid: () => boolean;
 }
 
-const baseWsURL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080/ws';
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      accessToken: null,
+      user: null,
+      isAuthenticated: false,
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  accessToken: null,
-  isStompConnected: false,
-  stompClient: null,
-  setAccessToken: (token) => {
-    const prevClient = get().stompClient;
-    if (prevClient) {
-      prevClient.deactivate();
+      setAccessToken: (token) => {
+        set({
+          accessToken: token,
+          isAuthenticated: true
+        });
+      },
+
+      setUser: (user) => {
+        set({ user });
+      },
+
+      clearAuth: () => {
+        set({
+          accessToken: null,
+          user: null,
+          isAuthenticated: false
+        });
+      },
+
+      isTokenValid: () => {
+        const token = get().accessToken;
+        if (!token) {
+          return false;
+        }
+
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          return payload.exp * 1000 > Date.now();
+        } catch {
+          return false;
+        }
+      },
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated
+      }),
     }
-
-    const client = new Client({
-      brokerURL: baseWsURL,
-      connectHeaders: {Authorization: `Bearer ${token}`},
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      debug: (str) => console.log('STOMP debug:', str),
-    });
-
-    client.onConnect = () => {
-      console.log('STOMP connected');
-      set({isStompConnected: true, stompClient: client});
-    };
-
-    client.onStompError = (frame) => {
-      console.error('STOMP error:', frame.headers['message']);
-      set({isStompConnected: false});
-    };
-
-    client.onWebSocketClose = () => {
-      console.log('WebSocket closed, reconnecting...');
-      set({isStompConnected: false});
-    };
-
-    client.onWebSocketError = (error) => {
-      console.error('WebSocket error:', error);
-      set({isStompConnected: false});
-    };
-
-    client.activate();
-    set({ accessToken: token, stompClient: client });
-  },
-
-  setStompConnected: (connected) => set({ isStompConnected: connected }),
-
-  clearAuth: () => {
-    const client = get().stompClient;
-    if (client) {
-      client.deactivate();
-    }
-    set({ accessToken: null, isStompConnected: false, stompClient: null });
-  },
-
-  subscribe: (destination, callback) => {
-    const client = get().stompClient;
-    if (client?.active) {
-      return client.subscribe(destination, (message) => {
-        callback(JSON.parse(message.body));
-      });
-    } else {
-      console.warn('STOMP client not active for subscription:', destination);
-      return null;
-    }
-  },
-
-  unsubscribe: (destination) => {
-    const client = get().stompClient;
-    if (client?.active) {
-      client.unsubscribe(destination);
-    }
-  },
-
-  sendMessage: (destination, body) => {
-    const client = get().stompClient;
-    if (client?.active) {
-      client.publish({
-        destination,
-        body: JSON.stringify(body),
-      });
-    } else {
-      console.error('STOMP client not active for sending:', destination);
-    }
-  },
-}));
+  )
+);

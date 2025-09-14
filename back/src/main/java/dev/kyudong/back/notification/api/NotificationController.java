@@ -20,9 +20,9 @@ public class NotificationController implements NotificationApi {
 	@GetMapping
 	public ResponseEntity<NotificationResDto> findNotifications(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
-			@RequestParam(required = false) Long lastNotificationId,
-			@RequestParam(defaultValue = "10") @Positive int size) {
-		return ResponseEntity.ok(notificationService.findNotifications(userPrincipal.getId(), lastNotificationId, size));
+			@RequestParam(required = false) Long cursorId
+	) {
+		return ResponseEntity.ok(notificationService.findNotifications(userPrincipal.getId(), cursorId));
 	}
 
 	@Override

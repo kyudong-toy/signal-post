@@ -30,8 +30,8 @@ export interface ChatRoomCreateRes {
 }
 
 export interface ChatMessageEntity {
-  cursorId: number,
-  cursorTime: string,
+  cursorId: number | null,
+  cursorTime: string | null,
   hasNext: boolean,
   content: ChatMessageItem[]
 }

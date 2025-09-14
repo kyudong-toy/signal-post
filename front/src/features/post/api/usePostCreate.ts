@@ -1,6 +1,6 @@
-import type {PostCreateReq, PostCreateRes} from "@/entities/post/model/types.ts";
 import axiosClient from "../../../shared/axios";
 import {useMutation} from "@tanstack/react-query";
+import type {PostCreateReq, PostCreateRes} from "../../../entities/post";
 
 const postCreate = async (data: PostCreateReq): Promise<PostCreateRes> => {
   const response = await axiosClient.post<PostCreateRes>('/posts', data);
@@ -12,6 +12,7 @@ export const usePostCreate = () => {
     mutationFn: postCreate,
     onSuccess: (data) => {
       // todo: 게시글 작성 성공
+
       console.log(data);
     },
     onError: (error) => {

@@ -1,5 +1,7 @@
 package dev.kyudong.back.notification.domain;
 
+import dev.kyudong.back.post.domain.entity.Comment;
+import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +35,14 @@ public class Notification {
 	@Column(name = "REDIRECT_URL")
 	private String redirectUrl;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "POST_ID")
+	private Post post;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "COMMENT_Id")
+	private Comment comment;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "TYPE", nullable = false)
 	private NotificationType type;
@@ -49,7 +59,7 @@ public class Notification {
 	private Instant readAt;
 
 	@Builder
-	private Notification(User receiver, User sender, String redirectUrl, NotificationType type) {
+	private Notification(User receiver, User sender, String redirectUrl, Post post, Comment comment, NotificationType type) {
 		this.receiver = receiver;
 		this.sender = sender;
 		this.redirectUrl = redirectUrl;

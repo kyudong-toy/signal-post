@@ -4,5 +4,6 @@ public enum NotificationType {
 
 	POST,
 	FOLLOW,
+	COMMENT
 
 }
