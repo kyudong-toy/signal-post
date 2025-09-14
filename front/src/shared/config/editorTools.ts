@@ -3,7 +3,7 @@ import List from '@editorjs/list';
 import ImageTool from '@editorjs/image';
 import {fileUpload} from "@/features/file/api/fileUpload.ts";
 
-// Editor.js에 어떤 도구들을 사용할지 정의하는 설정 객체입니다.
+// BaseEditor.js에 어떤 도구들을 사용할지 정의하는 설정 객체입니다.
 export const EDITOR_TOOLS = {
   header: Header,
   list: List,

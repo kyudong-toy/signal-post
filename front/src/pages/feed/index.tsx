@@ -1,11 +1,10 @@
-import {FeedList} from "@/widgets/feed/ui/FeedList.tsx";
+import {FeedList} from "../../widgets/feed/ui/FeedList.tsx";
 
 const FeedPage = () => {
   return (
-    <main>
-      <h1>피드</h1>
+    <div className={'py-7'}>
       <FeedList />
-    </main>
+    </div>
   )
 }
 

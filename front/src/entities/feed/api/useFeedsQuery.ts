@@ -1,5 +1,6 @@
-import {useInfiniteQuery} from "@tanstack/react-query";
-import {findFeeds} from "@/entities/feed/api/feedApi.ts";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { findFeeds } from "./feedApi.ts";
+import type {FeedEntity} from "../model/types.ts";
 
 export const feedsQueryKeys = {
   all: ['feeds'] as const,
@@ -9,15 +10,10 @@ export const useFeedsQuery = () => {
   return useInfiniteQuery({
     queryKey: feedsQueryKeys.all,
     queryFn: ({pageParam}) => findFeeds(pageParam),
-    initialPageParam: {
-      size: 10
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.hasNext) {
-        return {
-          lastFeedId: lastPage.lastFeedId,
-          size: 10
-        }
+    initialPageParam: 0,
+    getNextPageParam: (page: FeedEntity) => {
+      if (page.hasNext) {
+        return page.nextPage;
       }
       return undefined;
     }

@@ -2,13 +2,16 @@ package dev.kyudong.back.notification.event;
 
 import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
+import dev.kyudong.back.notification.api.dto.NotificationQueryDto;
 import dev.kyudong.back.notification.domain.Notification;
 import dev.kyudong.back.notification.domain.NotificationType;
 import dev.kyudong.back.notification.handler.NotificationWebSocketHandler;
 import dev.kyudong.back.notification.api.dto.res.NotificationDetailResDto;
 import dev.kyudong.back.notification.repository.NotificationRepository;
 import dev.kyudong.back.notification.utils.RedirectUrlCreator;
+import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.domain.dto.event.PostCreateNotification;
+import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 	private final NotificationRepository notificationRepository;
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
+	private final PostUsecase postUsecase;
 	private final NotificationWebSocketHandler notificationWebSocketHandler;
 	private final RedirectUrlCreator redirectUrlCreator;
 
@@ -37,7 +41,7 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void handlePostCreateEvent(PostCreateNotification event) {
 		final Long postId = event.postId();
-		log.info("게시글 생성 이벤트 수신완료, 알림 이벤트를 시작합니다: postId={}", postId);
+		log.debug("게시글 생성 이벤트 수신완료, 알림 이벤트를 시작합니다: postId={}", postId);
 
 		User sender = userRepository.getReferenceById(event.senderId());
 		List<User> followers = followRepository.findByFollowingWithFollower(sender).stream()
@@ -49,6 +53,7 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 			return;
 		}
 
+		Post post = postUsecase.getPostEntityOrThrow(postId);
 		String redirectUrl = redirectUrlCreator.createPostUrl(event.postId());
 		List<Notification> newNotifications = followers.stream()
 				.map(receiver ->
@@ -57,15 +62,18 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 								.sender(sender)
 								.redirectUrl(redirectUrl)
 								.type(NotificationType.POST)
+								.post(post)
 								.build()
 				)
 				.toList();
-		List<Notification> savedNotifications = notificationRepository.saveAll(newNotifications);
-		log.info("팔로워 {}에게 알림을 생성했습니다: postId={}", savedNotifications.size(), postId);
+		List<NotificationQueryDto> savedNotifications = notificationRepository.saveAll(newNotifications).stream()
+				.map(NotificationQueryDto::createNotification)
+				.toList();
+		log.debug("팔로워 {}에게 알림을 생성했습니다: postId={}", savedNotifications.size(), postId);
 
 		savedNotifications.forEach(notification -> {
 			NotificationDetailResDto notificationDetailResDto = NotificationDetailResDto.from(notification);
-			notificationWebSocketHandler.sendNotificationToUser(notificationDetailResDto.receiverId(), notificationDetailResDto);
+			notificationWebSocketHandler.sendNotificationToUser(notification.receiverId(), notificationDetailResDto);
 		});
 	}
 

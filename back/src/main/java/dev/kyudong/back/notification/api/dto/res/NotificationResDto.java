@@ -1,27 +1,27 @@
 package dev.kyudong.back.notification.api.dto.res;
 
-import dev.kyudong.back.notification.domain.Notification;
-import org.springframework.data.domain.Slice;
+import dev.kyudong.back.notification.api.dto.NotificationQueryDto;
 
 import java.util.List;
 
 public record NotificationResDto(
-		Long lastNotificationId,
+		Long cursorId,
 		boolean hasNext,
-		List<NotificationDetailResDto> content
+		List<NotificationDetailResDto> contents
 ) {
-	public static NotificationResDto from(Slice<Notification> notifications) {
-		List<NotificationDetailResDto> content = notifications.getContent().stream()
+	public static NotificationResDto from(List<NotificationQueryDto> queryDtos) {
+		List<NotificationDetailResDto> content = queryDtos.stream()
 				.map(NotificationDetailResDto::from)
+				.limit(20)
 				.toList();
 
-		Long lastNotificationId = null;
-		boolean hasNext = notifications.hasNext();
+		boolean hasNext = queryDtos.size() > 20;
 
+		Long cursorId = null;
 		if (hasNext) {
-			lastNotificationId = content.get(content.size() - 1 ).id();
+			cursorId = content.get(content.size() - 1).content().id();
 		}
 
-		return new NotificationResDto(lastNotificationId, hasNext, content);
+		return new NotificationResDto(cursorId, hasNext, content);
 	}
 }

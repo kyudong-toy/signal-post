@@ -1,4 +1,4 @@
-import {PostForm} from "@/features/post/ui/PostForm.tsx";
+import {PostForm} from "@/features/post/ui/PostDialogForm.tsx";
 import {useParams} from "react-router-dom";
 import {usePostQuery} from "@/entities/post";
 

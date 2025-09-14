@@ -9,12 +9,12 @@ export const messagesQueryKeys = {
 export const useChatMessagesQuery = (roomId: number) => {
   return useInfiniteQuery({
     queryKey: messagesQueryKeys.detail(roomId),
-    queryFn: ({pageParam}) => findMessages({
+    queryFn: ({ pageParam = {} }) => findMessages({
       roomId: roomId,
       cursorId: pageParam.cursorId,
       cursorTime: pageParam.cursorTime
     }),
-    initialPageParam: {},
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => {
       if (lastPage.hasNext) {
         return {

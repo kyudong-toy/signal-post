@@ -1,26 +1,23 @@
 import axiosClient from "../../../shared/axios";
-import {useMutation} from "@tanstack/react-query";
-import type {UserLoginReq, UserLoginRes} from "@/entities/user/model/types.ts";
-import {useAuthStore} from "@/entities/user/model/authStore.ts";
+import { useMutation } from "@tanstack/react-query";
+import type { UserLoginReq, UserLoginRes } from "@/entities/user";
+import { useAuth } from "@/entities/user/hooks/useAuth.ts";
 
 const login = async (data: UserLoginReq): Promise<UserLoginRes> => {
   const response = await axiosClient.post<UserLoginRes>('/users/login', data);
-  return  response.data;
+  return response.data;
 };
 
 export const useLogin = () => {
-  const {setAccessToken} = useAuthStore();
+  const { setAuth } = useAuth();
 
   return useMutation<UserLoginRes, Error, UserLoginReq>({
     mutationFn: login,
     onSuccess: (data) => {
-      // todo: 로그인 성공
-      console.log(data);
-      setAccessToken(data.token);
+      setAuth(data);
     },
     onError: (error) => {
-      // todo : 로그인 실패
-      console.log(error);
+      console.debug('로그인에 실패했습니다 : ' + error)
     }
   });
 };

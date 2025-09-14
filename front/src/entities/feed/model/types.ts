@@ -1,15 +1,22 @@
 export interface FeedEntity {
-  lastFeedId: number,
   hasNext: boolean,
+  nextPage: number,
   content: FeedItem[]
 }
 
 export interface FeedItem {
-  postId: number,
-  userId: number,
-  subject: string,
-  content: string,
-  status: 'NORMAL' | 'DELETED'
-  createdAt: string,
-  modifiedAt: string,
+  author: {
+    id: number,
+    username: string
+  },
+  content: {
+    postId: number,
+    subject: string,
+    content: string,
+    viewCount: number,
+    commentCount: number,
+    status: 'NORMAL' | 'DELETED',
+    createdAt: string,
+    modifiedAt: string
+  }
 }

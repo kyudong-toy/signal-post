@@ -1,1 +1,1 @@
-export * from './ui/PostForm.tsx'
+export * from './ui/PostDialogForm.tsx'

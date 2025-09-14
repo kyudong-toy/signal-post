@@ -21,12 +21,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 			FROM Notification n
 			JOIN FETCH n.receiver
 			WHERE n.receiver = :receiver
-			AND n.id < :lastNotificationId
+			AND n.id < :cursorId
 			ORDER BY n.id DESC, n.createdAt DESC
 	""")
 	Slice<Notification> findNotificationByReceiver(
 			@Param("receiver") User receiver,
-			@Param("lastNotificationId") Long lastNotificationId,
+			@Param("cursorId") Long cursorId,
 			Pageable pageable
 	);
 

@@ -1,4 +1,6 @@
-import {FeedItemCard, useFeedsQuery} from "@/entities/feed";
+import { FeedItemCard, useFeedsQuery } from "@/entities/feed";
+import { useInView } from "react-intersection-observer";
+import { Fragment, useEffect } from "react";
 
 export const FeedList = () => {
   const {
@@ -10,23 +12,52 @@ export const FeedList = () => {
     isError
   } = useFeedsQuery();
 
-  if (isLoading) return <div>피드를 불러오는 중...</div>;
-  if (isError) return <div>에러가 발생했습니다.</div>;
+  const { ref, inView } = useInView({
+    threshold: 0,
+  });
 
-  // flatMap을 사용해 2차원 배열(pages)을 1차원 배열로 만듭니다.
-  const feedItems = data?.pages.flatMap(page => page.content) || [];
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  if (isLoading) {
+    return <div>피드를 불러오는 중...</div>;
+  }
+
+  if (isError) {
+    return <div>에러가 발생했습니다.</div>;
+  }
 
   return (
-    <div>
-      {feedItems.map(item => (
-        <FeedItemCard key={item.postId} item={item} />
+    <div className="w-full max-w-4xl mx-auto space-y-4">
+      {data?.pages.map((page, i) => (
+        <Fragment key={i}>
+          {page.content.map((feedItem) => (
+            <FeedItemCard
+              key={feedItem.content.postId}
+              author={feedItem.author}
+              content={feedItem.content}
+            />
+          ))}
+        </Fragment>
       ))}
-      <button
-        onClick={() => fetchNextPage()}
-        disabled={!hasNextPage || isFetchingNextPage}
-      >
-        {isFetchingNextPage ? '로딩 중...' : hasNextPage ? '더 보기' : '마지막 피드입니다'}
-      </button>
+
+      {hasNextPage && (
+        <div ref={ref} className="h-1" />
+      )}
+
+      {isFetchingNextPage && (
+        <div className="text-center py-4">계속 읽어오는 중...</div>
+      )}
+
+      {/* 더 이상 다음 페이지가 없을 때 메시지를 표시 */}
+      {!hasNextPage && (
+        <div className="text-center py-4 text-gray-500">
+          마지막 피드입니다...
+        </div>
+      )}
     </div>
   );
 }

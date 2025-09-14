@@ -3,7 +3,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import type {ChatMessageCreateReq} from "@/entities/chat/model/model.ts";
 import {useChatMessageCreateSchema} from "@/entities/chat/model/model.ts";
 import {useChatMessageCreate} from "@/features/chat/api/useChatMessageCreate.ts";
-import {CommentEditor} from "@/features/comment/ui/CommentEditor.tsx";
+import {CommentEditor} from "@/features/comment/ui/BaseEditor.tsx";
 
 interface ChatMessageFormProps {
   roomId: number

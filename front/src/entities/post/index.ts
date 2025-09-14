@@ -1,9 +1,6 @@
-export {PostViewer} from './ui/PostViewer.tsx';
-
 export {usePostQuery} from './api/usePostQuery.ts'
 
 export type {PostEntity} from './model/types';
-export type {PostContent} from './model/types';
 
 export type {
   PostCreateReq,
@@ -13,6 +10,5 @@ export type {
 } from './model/types';
 
 export {
-  postCreateSchema,
-  postUpdateSchema
+  postRequestSchema
 } from './model/types';
