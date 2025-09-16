@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 		info = @Info(
 				title = "Signal Post API 명세서",
 				description = "1인 미디어 플랫폼 Signal Post의 API 명세서입니다.",
-				version = "v0.0.2"
+				version = "v0.0.3"
 		)
 )
 public class SwaggerConfig {

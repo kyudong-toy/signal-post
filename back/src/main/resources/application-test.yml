@@ -24,8 +24,10 @@ logging:
 # jwt Configuration
 # ===================================================================
 jwt:
-  secret: SGVsbG9AI2UzV3JvbGQhQCN9RHxkc2prZC0oOTBNeVNlY3JldCEyMyRGREcjMw==
-  expiration-time: 3600000
+  access-secret: SGVsbG9AI2UzV3JvbGQhQCN9RHxkc2prZC0oOTBNeVNlY3JldCEyMyRGREcjMw==
+  refresh-secret: bXlyZWZyZXNoIXNlY2V0IUBrI2UleSoxOWNuZGRrYy4xMF9AIV8pYztseHZjeDhwYWp6Y3guV0FVKEBCZHNmZHM=
+  access-expiration-time: 3600000
+  refresh-expiration-time: 604800000
 
 # ===================================================================
 # file Configuration
@@ -49,3 +51,9 @@ decorator:
       slow-query:
         enable-logging: true
         log-level: INFO
+
+# ===================================================================
+# stomp Configuration
+# ===================================================================
+stomp:
+  prefix: SW=

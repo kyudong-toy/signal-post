@@ -13,7 +13,7 @@ import dev.kyudong.back.post.application.port.in.web.PostUsecase;
 import dev.kyudong.back.post.domain.dto.event.PostCreateNotification;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.repository.UserRepository;
+import dev.kyudong.back.user.service.UserReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,19 +31,19 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 
 	private final NotificationRepository notificationRepository;
 	private final FollowRepository followRepository;
-	private final UserRepository userRepository;
 	private final PostUsecase postUsecase;
 	private final NotificationWebSocketHandler notificationWebSocketHandler;
 	private final RedirectUrlCreator redirectUrlCreator;
+	private final UserReaderService userReaderService;
 
 	@Override
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void handlePostCreateEvent(PostCreateNotification event) {
 		final Long postId = event.postId();
 		log.debug("게시글 생성 이벤트 수신완료, 알림 이벤트를 시작합니다: postId={}", postId);
 
-		User sender = userRepository.getReferenceById(event.senderId());
+		User sender = userReaderService.getUserReference(event.senderId());
 		List<User> followers = followRepository.findByFollowingWithFollower(sender).stream()
 				.map(Follow::getFollower)
 				.toList();
@@ -66,9 +66,11 @@ public class DefaultNotificationEventHandler implements NotificationEventHandler
 								.build()
 				)
 				.toList();
+
 		List<NotificationQueryDto> savedNotifications = notificationRepository.saveAll(newNotifications).stream()
 				.map(NotificationQueryDto::createNotification)
 				.toList();
+
 		log.debug("팔로워 {}에게 알림을 생성했습니다: postId={}", savedNotifications.size(), postId);
 
 		savedNotifications.forEach(notification -> {

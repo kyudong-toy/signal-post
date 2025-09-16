@@ -20,13 +20,20 @@ public interface FileRepository extends JpaRepository<File, Long> {
 
 	List<File> findByStatusAndCreatedAtBefore(FileStatus status, Instant threshold);
 
+	Optional<File> findByIdAndOwnerId(Long id, Long OwnerId);
+
 	@Modifying
 	@Query("""
 		UPDATE File f
-		SET f.status = 'DELETED', f.deletedAt = :now
-		WHERE f.id IN :delIds
+		SET f.status = 'ACTIVE', f.ownerId = :ownerId, f.fileOwnerType = :fileOwnerType
+		WHERE f.status = 'PENDING'
+		AND f.id = :fileId
 	""")
-	void softDeleteByIds(@Param("delIds")Set<Long> delIds, @Param("now") Instant now);
+	void confirmFileById(
+			@Param("fileIds") Long fileId,
+			@Param("ownerId") Long ownerId,
+			@Param("fileOwnerType") FileOwnerType fileOwnerType
+	);
 
 	@Modifying
 	@Query("""
@@ -36,9 +43,17 @@ public interface FileRepository extends JpaRepository<File, Long> {
 		AND f.id IN :fileIds
 	""")
 	void confirmFileByIds(
-			@Param("fileIds")Set<Long> fileIds,
+			@Param("fileIds") Set<Long> fileIds,
 			@Param("ownerId") Long ownerId,
 			@Param("fileOwnerType") FileOwnerType fileOwnerType
 	);
+
+	@Modifying
+	@Query("""
+		UPDATE File f
+		SET f.status = 'DELETED', f.deletedAt = :now
+		WHERE f.id IN :delIds
+	""")
+	void softDeleteByIds(@Param("delIds")Set<Long> delIds, @Param("now") Instant now);
 
 }

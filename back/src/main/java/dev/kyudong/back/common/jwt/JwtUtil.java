@@ -1,11 +1,12 @@
 package dev.kyudong.back.common.jwt;
 
 import dev.kyudong.back.user.domain.User;
+import dev.kyudong.back.user.exception.UserTokenExpiredExcpetion;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.time.LocalDateTime;
@@ -14,22 +15,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@Component
 public class JwtUtil {
 
-	private final Key key;
+	private final Key accessKey;
+	private final Key refreshKey;
 	private final long accessTokenExpirationTime;
+	private final long refreshTokenExpirationTime;
 
 	public JwtUtil(
-			@Value("${jwt.secret}") String secretKey,
-			@Value("${jwt.expiration-time}") long accessTokenValidityInMilliseconds
+			final String accessSecret,
+			final String refreshSecret,
+			long accessTokenValidityInMilliseconds,
+			long refreshTokenValidityInMilliseconds
 	) {
-		this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
+		byte[] accessKeyBytes = Decoders.BASE64.decode(accessSecret);
+		this.accessKey = Keys.hmacShaKeyFor(accessKeyBytes);
+
+		byte[] refreshKeyBytes = Decoders.BASE64.decode(refreshSecret);
+		this.refreshKey = Keys.hmacShaKeyFor(refreshKeyBytes);
+
 		this.accessTokenExpirationTime = accessTokenValidityInMilliseconds;
+		this.refreshTokenExpirationTime = refreshTokenValidityInMilliseconds;
 	}
 
-	public String generateToken(User user) {
-		log.debug("토큰 생성을 시작합니다. userId: {}, username: {}", user.getId(), user.getUsername());
+	public String createAccessToken(User user) {
+		return generateToken(user, accessKey, accessTokenExpirationTime);
+	}
+
+	public String createRefreshToken(User user) {
+		return generateToken(user, refreshKey, refreshTokenExpirationTime);
+	}
+
+	private String generateToken(User user, Key key, long expirationTime) {
+		log.debug("토큰 생성을 시작합니다: userId={}, username={}", user.getId(), user.getUsername());
 		Map<String, Object> header = new HashMap<>();
 		header.put(JwsHeader.TYPE, JwsHeader.JWT_TYPE);
 		header.put(JwsHeader.ALGORITHM, SignatureAlgorithm.HS256);
@@ -40,39 +58,51 @@ public class JwtUtil {
 		claims.put("status", user.getStatus());
 
 		Date now = new Date();
-		Date expiredTime = new Date(now.getTime() + this.accessTokenExpirationTime);
-		String token =  Jwts.builder()
-							.setHeader(header)
-							.setClaims(claims)
-							.setIssuedAt(now)
-							.setExpiration(expiredTime)
-							.signWith(key, SignatureAlgorithm.HS256)
-							.compact();
+		Date expiredTime = new Date(now.getTime() + expirationTime);
+		String token = Jwts.builder()
+				.setHeader(header)
+				.setClaims(claims)
+				.setIssuedAt(now)
+				.setExpiration(expiredTime)
+				.signWith(key, SignatureAlgorithm.HS256)
+				.compact();
 
-		log.info("토큰을 생성 했습니다. userId: {}, username: {}, time: {}", user.getId(), user.getUsername(), LocalDateTime.now());
+		log.debug("토큰을 생성했습니다: userId={}, username={}, time={}", user.getId(), user.getUsername(), LocalDateTime.now());
 		return token;
 	}
 
-	public String getUsernameFromToken(String token) {
-		return getClaims(token).getSubject();
-	}
-
-	public boolean validateToken(String token) {
+	public Claims getClaimsFromAccessToken(String token) {
 		try {
-			Claims claims = getClaims(token);
-			return !claims.getExpiration().before(new Date());
-		} catch (Exception e) {
-			log.warn("토큰 검증에 실패했습니다. token: {}", token);
-			return false;
+			return Jwts.parserBuilder()
+					.setSigningKey(accessKey)
+					.build()
+					.parseClaimsJws(token)
+					.getBody();
+		} catch (ExpiredJwtException ex) {
+			throw new UserTokenExpiredExcpetion();
+		} catch (SignatureException s) {
+			throw new RuntimeException();
 		}
 	}
 
-	private Claims getClaims(String token) {
-		return Jwts.parserBuilder()
-				.setSigningKey(key)
+	public boolean validateRefreshToken(String token) {
+		try {
+			Jwts.parserBuilder()
+				.setSigningKey(refreshKey)
 				.build()
 				.parseClaimsJws(token)
 				.getBody();
+			return true;
+		} catch (ExpiredJwtException ex) {
+			log.warn("만료된 토큰입니다");
+			return false;
+		} catch (SignatureException s) {
+			log.error("유효하지 않는 암호화입니다");
+			return false;
+		} catch (Exception e) {
+			log.error("토큰 파싱중 에러 발생: token={}", token);
+			return false;
+		}
 	}
 
 }

@@ -20,7 +20,7 @@ import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.domain.entity.PostStatus;
 import dev.kyudong.back.post.domain.entity.Tag;
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.service.UserService;
+import dev.kyudong.back.user.service.UserReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -36,7 +36,7 @@ import java.util.*;
 public class PostService implements PostUsecase {
 
 	private final ObjectMapper objectMapper;
-	private final UserService userService;
+	private final UserReaderService userReaderService;
 	private final PostEventPublishPort postEventPublishPort;
 	private final PostViewEventPublishPort postViewEventPublishPort;
 	private final PostPersistencePort postPersistencePort;
@@ -51,7 +51,7 @@ public class PostService implements PostUsecase {
 		Post post = postPersistencePort.findByIdOrThrow(postId);
 
 		if (userId !=  null && !userId.equals(post.getUser().getId())) {
-			User user = userService.getUserProxy(userId);
+			User user = userReaderService.getUserReference(userId);
 			postViewEventPublishPort.increasePostViewWithUser(user, post);
 			redissonClient.getBloomFilter("feed_seen:user" + userId).add(postId);
 		}
@@ -80,7 +80,7 @@ public class PostService implements PostUsecase {
 				request.subject(),
 				conventContentJsonToString(request.content())
 		);
-		User user = userService.getUserProxy(userId);
+		User user = userReaderService.getUserReference(userId);
 		user.addPost(newPost);
 
 		Post savedPost = postPersistencePort.save(newPost);
@@ -90,7 +90,7 @@ public class PostService implements PostUsecase {
 
 		postEventPublishPort.postCreateEventPublish(savedPost, request.fileIds());
 
-		log.info("게시글 생성에 성공했습니다: postId={}", savedPost.getId());
+		log.debug("게시글 생성에 성공했습니다: postId={}", savedPost.getId());
 		return PostCreateResDto.from(savedPost);
 	}
 
@@ -110,7 +110,7 @@ public class PostService implements PostUsecase {
 
 		postEventPublishPort.postUpdateEventPublish(post, request.fileIds());
 
-		log.info("게시글 수정 요청 성공: userId={}, postId={}", userId, post.getId());
+		log.debug("게시글 수정 요청 성공: userId={}, postId={}", userId, post.getId());
 		return PostUpdateResDto.from(post);
 	}
 
@@ -132,7 +132,7 @@ public class PostService implements PostUsecase {
 			}
 		}
 
-		log.info("게시글 상태를 수정했습니다: userId={}, postId={}, prevStatus={} curStatus={}", post.getUser().getId(), post.getId(), prevStatus, post.getStatus().name());
+		log.debug("게시글 상태를 수정했습니다: userId={}, postId={}, prevStatus={} curStatus={}", post.getUser().getId(), post.getId(), prevStatus, post.getStatus().name());
 		return PostStatusUpdateResDto.from(post);
 	}
 

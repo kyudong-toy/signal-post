@@ -120,7 +120,51 @@ public interface FollowApi {
 					)
 			),
 	})
-	ResponseEntity<FollowCreateResDto> createFollow(
+	ResponseEntity<FollowCreateResDto> requestFollow(
+			@PathVariable String username,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
+	);
+
+	@SuppressWarnings("unused")
+	@Operation(summary = "팔로우 거절", description = "요청한 팔로우를 거절합니다.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "팔로우 승낙함"),
+			@ApiResponse(responseCode = "404", description = "팔로잉 사용자가 존재하지 않음.",
+					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = ProblemDetail.class),
+							examples = @ExampleObject(value =
+									"""
+									{
+										"type": "about:blank",
+										"title": "User Not Found",
+										"status": 404,
+										"detail": "User: testUser Not Found",
+										"instance": "/api/v1/users/{username}/follow",
+										"timestamp": "2025-08-16T16:20:22.367368100Z"
+									}
+									"""
+							)
+					)
+			),
+			@ApiResponse(responseCode = "400", description = "이미 팔로잉 요청을 한 사용자임.",
+					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = ProblemDetail.class),
+							examples = @ExampleObject(value =
+									"""
+									{
+										"type": "about:blank",
+										"title": "Already Follow Relation",
+										"status": 400,
+										"detail": "이미 팔로잉 중 입니다: followerId=999, followingUsername=testUser",
+										"instance": "/api/v1/users/testUser/follow",
+										"timestamp": "2025-08-16T16:20:22.367368100Z"
+									}
+									"""
+							)
+					)
+			),
+	})
+	ResponseEntity<FollowRelationResDto> reject(
 			@PathVariable String username,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
@@ -164,7 +208,7 @@ public interface FollowApi {
 					)
 			),
 	})
-	ResponseEntity<FollowAcceptResDto> acceptFollow(
+	ResponseEntity<FollowRelationResDto> accept(
 			@PathVariable String username,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
@@ -208,7 +252,7 @@ public interface FollowApi {
 					)
 			),
 	})
-	ResponseEntity<FollowBlokcedResDto> blokcFollow(
+	ResponseEntity<FollowRelationResDto> block(
 			@PathVariable String username,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
@@ -252,7 +296,7 @@ public interface FollowApi {
 					)
 			),
 	})
-	ResponseEntity<FollowDeleteResDto> deleteFollow(
+	ResponseEntity<FollowRelationResDto> unFollow(
 			@PathVariable String username,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);

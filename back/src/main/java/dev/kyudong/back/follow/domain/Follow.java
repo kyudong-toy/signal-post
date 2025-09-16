@@ -44,11 +44,14 @@ public class Follow {
 	@Column(name = "MODIFIED_AT")
 	private Instant modifiedAt;
 
-	@Builder
-	private Follow(User follower, User following) {
+	private Follow(User follower, User following, FollowStatus status) {
 		this.follower = follower;
 		this.following = following;
-		this.status = FollowStatus.PENDING;
+		this.status = status;
+	}
+
+	public static Follow create(User follower, User following) {
+		return new Follow(follower, following, FollowStatus.PENDING);
 	}
 
 	public void accept() {
@@ -59,7 +62,11 @@ public class Follow {
 		this.status = FollowStatus.BLOCKED;
 	}
 
-	public void unfollow() {
+	public void reject() {
+		this.status = FollowStatus.REJECT;
+	}
+
+	public void unFollow() {
 		this.status = FollowStatus.UNFOLLOWED;
 	}
 

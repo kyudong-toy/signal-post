@@ -2,28 +2,22 @@ package dev.kyudong.back.file.service;
 
 import dev.kyudong.back.file.api.dto.res.FileUploadResDto;
 import dev.kyudong.back.file.domain.File;
-import dev.kyudong.back.file.domain.FileOwnerType;
+import dev.kyudong.back.file.exception.FileMetadataNotFoundException;
 import dev.kyudong.back.file.exception.InvalidFileException;
 import dev.kyudong.back.file.manager.FileStorageManager;
 import dev.kyudong.back.file.properties.FileStorageProperties;
 import dev.kyudong.back.file.repository.FileRepository;
 import dev.kyudong.back.file.utils.FileValidationUtils;
-import dev.kyudong.back.post.domain.dto.event.PostCreateFileEvent;
-import dev.kyudong.back.post.domain.dto.event.PostUpdateFileEvent;
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.exception.UserNotFoundException;
-import dev.kyudong.back.user.repository.UserRepository;
+import dev.kyudong.back.user.service.UserReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -32,9 +26,9 @@ import java.util.UUID;
 public class FileService {
 
 	private final FileRepository fileRepository;
-	private final UserRepository userRepository;
 	private final FileStorageManager fileStorageManager;
 	private final FileStorageProperties fileStorageProperties;
+	private final UserReaderService userReaderService;
 
 	@Transactional
 	public FileUploadResDto storeTempFile(final Long uploaderId, final MultipartFile multipartFile) throws IOException {
@@ -51,11 +45,7 @@ public class FileService {
 		String storedFileName = UUID.randomUUID() + "." + originalFileName;
 		FileValidationUtils.validateFileName(storedFileName);
 
-		if (!userRepository.existsById(uploaderId)) {
-			log.warn("사용자 조회에 실패했습니다: uploaderId={}", uploaderId);
-			throw new UserNotFoundException(uploaderId);
-		}
-		User uploader = userRepository.getReferenceById(uploaderId);
+		User uploader = userReaderService.getUserReference(uploaderId);
 
 		String filePath = null;
 		try {
@@ -78,7 +68,7 @@ public class FileService {
 
 			// 파일 메타데이터 저장.
 			File savedFile = fileRepository.save(newFile);
-			log.info("파일 업로드 완료: uploaderId={}, id={}", uploaderId, savedFile.getId());
+			log.debug("파일 업로드 완료: uploaderId={}, id={}", uploaderId, savedFile.getId());
 
 			return FileUploadResDto.from(savedFile);
 		} catch (Exception e) {
@@ -89,35 +79,6 @@ public class FileService {
 			}
 
 			throw new RuntimeException("파일 업로드에 실패했습니다.", e);
-		}
-	}
-
-	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-	public void handlePostCreateEvent(PostCreateFileEvent event) {
-		final Long postId = event.postId();
-		log.info("게시글 생성 이벤트 수신완료: postId={}", postId);
-
-		// 파일들을 활성화 상태로 변경한다.
-		Set<Long> fileIds = event.fileIds();
-		if (!fileIds.isEmpty()) {
-			log.debug("게시글({})에 파일을 추가합니다: fileIds:{}", postId, fileIds);
-			fileRepository.confirmFileByIds(fileIds, postId, FileOwnerType.POST);
-		}
-	}
-
-	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-	public void handlePostUpdateEvent(PostUpdateFileEvent event) {
-		final Long postId = event.postId();
-		log.info("게시글 수정 이벤트 수신완료: postId={}", postId);
-
-		// 사용하지 않는 파일들을 삭제 처리
-		// todo : 기존 파일 목록 로드 로직 필요
-		
-		// 파일들을 활성화 상태로 변경한다.
-		Set<Long> fileIds = event.fileIds();
-		if (!fileIds.isEmpty()) {
-			log.debug("게시글({})에 파일을 추가합니다: fileIds:{}", postId, fileIds);
-			fileRepository.confirmFileByIds(fileIds, postId, FileOwnerType.POST);
 		}
 	}
 

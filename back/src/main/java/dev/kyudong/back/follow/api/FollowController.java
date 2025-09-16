@@ -35,10 +35,10 @@ public class FollowController implements FollowApi {
 
 	@Override
 	@PostMapping("/follow")
-	public ResponseEntity<FollowCreateResDto> createFollow(
+	public ResponseEntity<FollowCreateResDto> requestFollow(
 			@PathVariable String username,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		FollowCreateResDto followCreateResDto = followService.createFollow(userPrincipal.getId(), username);
+		FollowCreateResDto followCreateResDto = followService.requestFollow(userPrincipal.getId(), username);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
 				.build()
 				.toUri();
@@ -47,26 +47,33 @@ public class FollowController implements FollowApi {
 
 	@Override
 	@PatchMapping("/accept")
-	public ResponseEntity<FollowAcceptResDto> acceptFollow(
+	public ResponseEntity<FollowRelationResDto> accept(
 			@PathVariable String username,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		return ResponseEntity.ok(followService.acceptFollow(userPrincipal.getId(), username));
+		return ResponseEntity.ok(followService.accept(userPrincipal.getId(), username));
 	}
 
-	@Override
 	@PatchMapping("/block")
-	public ResponseEntity<FollowBlokcedResDto> blokcFollow(
+	public ResponseEntity<FollowRelationResDto> block(
 			@PathVariable String username,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		return ResponseEntity.ok(followService.blokcFollow(userPrincipal.getId(), username));
+		return ResponseEntity.ok(followService.block(userPrincipal.getId(), username));
 	}
 
 	@Override
-	@DeleteMapping("/follow")
-	public ResponseEntity<FollowDeleteResDto> deleteFollow(
+	@PatchMapping("/reject")
+	public ResponseEntity<FollowRelationResDto> reject(
 			@PathVariable String username,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		return ResponseEntity.ok(followService.deleteFollow(userPrincipal.getId(), username))	;
+		return ResponseEntity.ok(followService.reject(userPrincipal.getId(), username));
+	}
+
+	@Override
+	@DeleteMapping("/unfollow")
+	public ResponseEntity<FollowRelationResDto> unFollow(
+			@PathVariable String username,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+		return ResponseEntity.ok(followService.unFollow(userPrincipal.getId(), username))	;
 	}
 
 }

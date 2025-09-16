@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class CommentController implements CommentApi {
 	public ResponseEntity<CommentListResDto> findCommentsByPostId(
 			@PathVariable @Positive final Long postId,
 			@RequestParam(required = false) @Positive Long cursorId,
-			@RequestParam(required = false) CommentSort sort
+			@RequestParam CommentSort sort
 	) {
 		return ResponseEntity.ok(commentUsecase.findComments(postId, cursorId, sort));
 	}

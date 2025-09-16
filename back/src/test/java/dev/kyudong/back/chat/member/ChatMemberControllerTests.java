@@ -8,7 +8,7 @@ import dev.kyudong.back.chat.exception.ChatRoomNotFoundException;
 import dev.kyudong.back.chat.service.ChatMemberService;
 import dev.kyudong.back.common.config.SecurityConfig;
 import dev.kyudong.back.common.jwt.JwtUtil;
-import dev.kyudong.back.security.WithMockCustomUser;
+import dev.kyudong.back.testhelper.security.WithMockCustomUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;

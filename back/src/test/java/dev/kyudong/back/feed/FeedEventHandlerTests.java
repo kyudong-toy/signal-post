@@ -1,5 +1,6 @@
 package dev.kyudong.back.feed;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.kyudong.back.feed.domain.Feed;
 import dev.kyudong.back.feed.event.DefaulteedEventHandler;
 import dev.kyudong.back.feed.repository.FeedRepository;
@@ -7,15 +8,13 @@ import dev.kyudong.back.follow.domain.Follow;
 import dev.kyudong.back.follow.repository.FollowRepository;
 import dev.kyudong.back.post.domain.dto.event.PostCreateFeedEvent;
 import dev.kyudong.back.post.domain.entity.Post;
+import dev.kyudong.back.testhelper.base.UnitTestBase;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -23,8 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class FeedEventHandlerTests {
+public class FeedEventHandlerTests extends UnitTestBase {
 
 	@Mock
 	private FollowRepository followRepository;
@@ -36,45 +34,19 @@ public class FeedEventHandlerTests {
 	@InjectMocks
 	private DefaulteedEventHandler defaulteedEventHandler;
 
-	private static User makeMockUser(String username, Long id) {
-		User mockUser = User.builder()
-				.username(username)
-				.rawPassword("passWord")
-				.encodedPassword("passWord")
-				.build();
-		ReflectionTestUtils.setField(mockUser, "id", id);
-		return mockUser;
-	}
-
-	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.create("제목", "");
-		ReflectionTestUtils.setField(mockPost, "id", 1L);
-		ReflectionTestUtils.setField(mockPost, "user", mockUser);
-		return mockPost;
-	}
-
-	private static Follow makeMockFollow(User follower, User following, Long id) {
-		Follow follow = Follow.builder()
-				.follower(follower)
-				.following(following)
-				.build();
-		ReflectionTestUtils.setField(follow, "id", id);
-		return follow;
-	}
-
 	@Test
 	@DisplayName("피드 생성 이벤트 - 성공")
-	void handlePostCreateEvent_success() {
+	void handlePostCreateEvent_success() throws JsonProcessingException {
 		// given
-		User mockFollowing = makeMockUser("cnzn1d", 999L);
-		Post mockPost = makeMockPost(mockFollowing);
-		User mockFollower1 = makeMockUser("ckzxv2", 1L);
-		User mockFollower2 = makeMockUser("ccxvn1sd", 2L);
-		User mockFollower3 = makeMockUser("ckj31zz", 3L);
+		User mockFollowing = createMockUser("cnzn1d", 999L);
+		Post mockPost = createMockPost(mockFollowing);
+		User mockFollower1 = createMockUser("ckzxv2", 1L);
+		User mockFollower2 = createMockUser("ccxvn1sd", 2L);
+		User mockFollower3 = createMockUser("ckj31zz", 3L);
 
-		Follow follow1 = makeMockFollow(mockFollower1, mockFollowing, 1L);
-		Follow follow2 = makeMockFollow(mockFollower2, mockFollowing, 2L);
-		Follow follow3 = makeMockFollow(mockFollower3, mockFollowing, 3L);
+		Follow follow1 = createMockFollow(mockFollower1, mockFollowing, 1L);
+		Follow follow2 = createMockFollow(mockFollower2, mockFollowing, 2L);
+		Follow follow3 = createMockFollow(mockFollower3, mockFollowing, 3L);
 		List<Follow> mockFollows = List.of(follow1, follow2, follow3);
 
 		PostCreateFeedEvent event = new PostCreateFeedEvent(mockPost, mockFollowing);

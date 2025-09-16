@@ -1,5 +1,6 @@
 package dev.kyudong.back.post.tag;
 
+import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.out.persistence.repository.TagRepository;
 import dev.kyudong.back.post.domain.entity.*;
@@ -9,11 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,10 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
-public class TagIntegrationTests {
+public class TagIntegrationTests extends IntegrationTestBase {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -67,7 +62,7 @@ public class TagIntegrationTests {
 
 		// when & then
 		mockMvc.perform(get("/api/v1/tags/search")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 						.param("query", query))
 				.andExpect(status().isOk())
 				.andDo(print());

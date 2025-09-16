@@ -15,8 +15,7 @@ import dev.kyudong.back.post.domain.entity.Comment;
 import dev.kyudong.back.post.domain.entity.CommentSort;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.exception.UserNotFoundException;
-import dev.kyudong.back.user.repository.UserRepository;
+import dev.kyudong.back.user.service.UserReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,10 +30,10 @@ import java.util.List;
 public class CommentService implements CommentUsecase {
 
 	private final ObjectMapper objectMapper;
-	private final UserRepository userRepository;
 	private final PostUsecase postUsecase;
 	private final CommentPersistencePort commentPersistencePort;
 	private final CommentQueryPort commentQueryPort;
+	private final UserReaderService userReaderService;
 
 	@Transactional(readOnly = true)
 	public CommentListResDto findComments(Long postId, Long cursorId, CommentSort sort) {
@@ -48,7 +47,7 @@ public class CommentService implements CommentUsecase {
 			return CommentListResDto.empty();
 		}
 
-		log.info("댓글 조회 요청 성공: postId: {}, size: {}", postId, commentList.size());
+		log.debug("댓글 조회 요청 성공: postId: {}, size: {}", postId, commentList.size());
 		return CommentListResDto.from(commentList);
 	}
 
@@ -57,22 +56,15 @@ public class CommentService implements CommentUsecase {
 	public CommentCreateResDto createComment(Long postId, Long userId, CommentCreateReqDto request) {
 		log.debug("댓글 생성 요청 시작: postId: {}, userId: {}", postId, userId);
 
-		if (!userRepository.existsById(userId)) {
-			log.warn("사용자 조회 실패 - 존재하지 않는 사용자 : id: {}", userId);
-			throw new UserNotFoundException(userId);
-		}
-		User user = userRepository.getReferenceById(userId);
+		User user = userReaderService.getUserReference(userId);
 
 		Post post = postUsecase.getPostEntityOrThrow(postId);
 		String content = conventContentJsonToString(request.content());
-		Comment newComment = Comment.builder()
-				.content(content)
-				.user(user)
-				.build();
+		Comment newComment = Comment.create(content, user);
 		post.addComment(newComment);
 		Comment savedComment = commentPersistencePort.save(newComment);
 
-		log.info("댓글 생성 성공: postId: {}, commentId: {}", postId, savedComment.getId());
+		log.debug("댓글 생성 성공: postId: {}, commentId: {}", postId, savedComment.getId());
 		return CommentCreateResDto.from(savedComment);
 	}
 
@@ -89,7 +81,7 @@ public class CommentService implements CommentUsecase {
 		String content = conventContentJsonToString(request.content());
 		comment.updateContent(content);
 
-		log.info("댓글 수정 요청 성공: postId: {}, commentId: {}", postId, commentId);
+		log.debug("댓글 수정 요청 성공: postId: {}, commentId: {}", postId, commentId);
 		return CommentUpdateResDto.from(comment);
 	}
 
@@ -112,7 +104,7 @@ public class CommentService implements CommentUsecase {
 			}
 		}
 
-		log.info("댓글 상태 수정 성공: userId: {}, postId: {}, status: {}", userId, comment.getId(), comment.getStatus().name());
+		log.debug("댓글 상태 수정 성공: userId: {}, postId: {}, status: {}", userId, comment.getId(), comment.getStatus().name());
 		return CommentStatusUpdateResDto.from(comment);
 	}
 

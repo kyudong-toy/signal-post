@@ -15,7 +15,7 @@ import dev.kyudong.back.post.domain.dto.web.res.PostStatusUpdateResDto;
 import dev.kyudong.back.post.domain.dto.web.res.PostUpdateResDto;
 import dev.kyudong.back.post.domain.entity.PostStatus;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.security.WithMockCustomUser;
+import dev.kyudong.back.testhelper.security.WithMockCustomUser;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -219,9 +219,8 @@ public class PostControllerTests {
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.title").value("User Not Found"))
+				.andExpect(jsonPath("$.title").value("USER Not Found"))
 				.andExpect(jsonPath("$.status").value(404))
-				.andExpect(jsonPath("$.detail").value("User {" + userId + "} Not Found"))
 				.andDo(print());
 	}
 

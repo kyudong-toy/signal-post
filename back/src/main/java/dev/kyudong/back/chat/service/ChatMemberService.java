@@ -64,7 +64,7 @@ public class ChatMemberService {
 		Set<ChatMember> newMembers = chatRoom.addNewMember(userList);
 
 		applicationEventPublisher.publishEvent(ChatMemberInviteEvent.of(chatRoom, existsUserIds, newMembers));
-		log.info("새로운 사용자가 채팅방에 참여하였습니다: roomId={}", roomId);
+		log.debug("새로운 사용자가 채팅방에 참여하였습니다: roomId={}", roomId);
 	}
 
 	@Transactional
@@ -87,7 +87,7 @@ public class ChatMemberService {
 		chatMember.leave();
 
 		applicationEventPublisher.publishEvent(ChatMemberLeftEvent.of(roomId, leaveUserId, chatRoom.getChatMembers()));
-		log.info("사용자가 채팅방을 떠났습니다: roomId={}, leaveUserId={}", roomId, leaveUserId);
+		log.debug("사용자가 채팅방을 떠났습니다: roomId={}, leaveUserId={}", roomId, leaveUserId);
 	}
 
 	@Transactional(readOnly = true)

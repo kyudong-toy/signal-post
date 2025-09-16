@@ -8,5 +8,4 @@ public interface CommentPersistencePort {
 
 	Comment findByIdOrThrow(Long commentId);
 
-
 }

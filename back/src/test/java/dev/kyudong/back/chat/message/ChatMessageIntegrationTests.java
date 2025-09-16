@@ -124,7 +124,7 @@ public class ChatMessageIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(get("/api/v1/chatroom/{roomId}/message", chatRoom.getId())
-								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1)))
+								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1)))
 						.andExpect(status().isOk())
 						.andDo(print())
 						.andReturn();
@@ -171,7 +171,7 @@ public class ChatMessageIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(get("/api/v1/chatroom/{roomId}/message", chatRoom.getId())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1))
 						.param("cursorId", String.valueOf(cursorId))
 						.param("cursorTime", String.valueOf(cursorTime)))
 				.andExpect(status().isOk())
@@ -199,7 +199,7 @@ public class ChatMessageIntegrationTests {
 
 		// when
 		mockMvc.perform(post("/api/v1/chatroom/{roomId}/message", chatRoom.getId())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1))
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isNoContent())
@@ -233,7 +233,7 @@ public class ChatMessageIntegrationTests {
 
 		// when
 		mockMvc.perform(delete("/api/v1/chatroom/{roomId}/message/{messageId}", chatRoom.getId(), savedChatMessage.getId())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1))
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isNoContent())

@@ -1,7 +1,7 @@
 package dev.kyudong.back.feed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.kyudong.back.IntegrationTestBase;
+import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.feed.api.dto.res.FeedItemResDto;
@@ -106,10 +106,8 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 				.toList();
 
 		// 팔로우 관계 생성
-		followRepository.save(Follow.builder()
-				.follower(testUser)
-				.following(follower)
-				.build());
+		Follow newFollow = Follow.create(follower, testUser);
+		followRepository.save(newFollow);
 
 		Category testCategory = Category.builder()
 				.categoryCode("test_1")
@@ -130,10 +128,10 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 			String sql = """
                 INSERT INTO posts (
                     user_id, subject, content, status, post_view_count,
-                    post_score, category_id, created_at, modified_at
+                    post_score, created_at, modified_at
                 ) VALUES (
                     :userId, :subject, CAST(:content AS jsonb), :status, :viewCount,
-                    :score, :categoryId, :createdAt, :modifiedAt
+                    :score, :createdAt, :modifiedAt
                 )
                 """;
 
@@ -228,7 +226,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 
 		// when
 		MvcResult result = mockMvc.perform(get("/api/v1/feeds")
-								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(testUser)))
+								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(testUser)))
 						.andExpect(status().isOk())
 						.andDo(print())
 						.andReturn();
@@ -259,7 +257,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 		redissonClient.getList(feedKey).clear();
 
 		MvcResult result = mockMvc.perform(get("/api/v1/feeds")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(testUser)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(testUser)))
 				.andExpect(status().isOk())
 				.andDo(print())
 				.andReturn();
@@ -280,7 +278,7 @@ public class FeedIntegrationTests extends IntegrationTestBase {
 
 		// when
 		result = mockMvc.perform(get("/api/v1/feeds")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(testUser))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(testUser))
 						.param("page", String.valueOf(page)))
 				.andExpect(status().isOk())
 				.andDo(print())

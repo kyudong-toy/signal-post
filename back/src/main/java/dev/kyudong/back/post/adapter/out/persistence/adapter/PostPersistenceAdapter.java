@@ -60,7 +60,7 @@ public class PostPersistenceAdapter implements PostPersistencePort {
 		Long min = Optional.of(maxAndMin.get("min", Long.class)).orElse(0L);
 
 		if (max == 0L || min == 0L || min >= max) {
-			log.info("게시물가 부족하여 추출을 중지합니다: max={}, min={}", max, min);
+			log.debug("게시물가 부족하여 추출을 중지합니다: max={}, min={}", max, min);
 			return;
 		}
 

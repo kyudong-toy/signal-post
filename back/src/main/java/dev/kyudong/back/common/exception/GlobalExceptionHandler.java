@@ -13,9 +13,7 @@ import dev.kyudong.back.interaction.exception.InteractionTargetNotFoundException
 import dev.kyudong.back.notification.exception.NotificationNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.user.exception.UserAlreadyExistsException;
-import dev.kyudong.back.user.exception.UserNotFoundException;
-import dev.kyudong.back.user.exception.UsersNotFoundException;
+import dev.kyudong.back.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +28,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(UserAlreadyExistsException.class)
 	protected ResponseEntity<ProblemDetail> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
 		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
-		problemDetail.setTitle("Duplicate User");
+		problemDetail.setTitle("Duplicate USER");
 		problemDetail.setStatus(HttpStatus.CONFLICT);
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
@@ -38,12 +36,12 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(UserNotFoundException.class)
-	protected ResponseEntity<ProblemDetail> handleUserNotFoundException(UserNotFoundException e) {
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-		problemDetail.setTitle("User Not Found");
-		problemDetail.setStatus(HttpStatus.NOT_FOUND);
-		problemDetail.setDetail(e.getMessage());
+	protected ResponseEntity<ProblemDetail> handleUserNotFoundException() {
+		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+		problemDetail.setTitle("USER Not Found");
+		problemDetail.setDetail("The requested user does not exist.");
 		problemDetail.setProperty("timestamp", Instant.now());
+		problemDetail.setProperty("errorCode", "USER_NOT_FOUND");
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
 	}
 
@@ -65,16 +63,6 @@ public class GlobalExceptionHandler {
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
-	}
-
-	@ExceptionHandler(InvalidAccessException.class)
-	protected ResponseEntity<ProblemDetail> handleInvalidAccessException(InvalidAccessException e) {
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
-		problemDetail.setTitle("Access Denied");
-		problemDetail.setStatus(HttpStatus.UNAUTHORIZED);
-		problemDetail.setDetail(e.getMessage());
-		problemDetail.setProperty("timestamp", Instant.now());
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
 	}
 
 	@ExceptionHandler(CommentNotFoundException.class)
@@ -205,6 +193,26 @@ public class GlobalExceptionHandler {
 		problemDetail.setDetail(e.getMessage());
 		problemDetail.setProperty("timestamp", Instant.now());
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+	}
+
+	@ExceptionHandler(UserTokenExpiredExcpetion.class)
+	protected ResponseEntity<ProblemDetail> handleUserTokenExpiredExcpetion(UserTokenExpiredExcpetion e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+		problemDetail.setTitle("USER token Expired");
+		problemDetail.setDetail("This token expired, Please reissue Token");
+		problemDetail.setProperty("timestamp", Instant.now());
+		problemDetail.setProperty("errorCode", "USER_TOKEN_EXPIRED");
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
+	}
+
+	@ExceptionHandler(InvalidTokenException.class)
+	protected ResponseEntity<ProblemDetail> handleInvalidTokenException(InvalidTokenException e) {
+		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+		problemDetail.setTitle("USER Token Invalid");
+		problemDetail.setDetail("This token is invalid. Please log out");
+		problemDetail.setProperty("timestamp", Instant.now());
+		problemDetail.setProperty("errorCode", "USER_TOKEN_INVALID");
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
 	}
 
 }

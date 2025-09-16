@@ -64,6 +64,8 @@ public class Notification {
 		this.sender = sender;
 		this.redirectUrl = redirectUrl;
 		this.type = type;
+		this.post = post;
+		this.comment = comment;
 		this.isRead = false;
 	}
 

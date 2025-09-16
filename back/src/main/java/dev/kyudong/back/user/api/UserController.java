@@ -1,16 +1,11 @@
 package dev.kyudong.back.user.api;
 
-import dev.kyudong.back.user.api.dto.req.UserCreateReqDto;
-import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.req.UserStatusUpdateReqDto;
-import dev.kyudong.back.user.api.dto.req.UserUpdateReqDto;
-import dev.kyudong.back.user.api.dto.res.UserCreateResDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
-import dev.kyudong.back.user.api.dto.res.UserStatusUpdateResDto;
-import dev.kyudong.back.user.api.dto.res.UserUpdateResDto;
+import dev.kyudong.back.user.api.dto.req.*;
+import dev.kyudong.back.user.api.dto.res.*;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import dev.kyudong.back.user.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +22,20 @@ public class UserController implements UserApi {
 	private final UserService userService;
 
 	@Override
+	@GetMapping("/{username}")
+	public ResponseEntity<UserDetailResDto> findUser(
+			@PathVariable @NotBlank String username,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+		UserDetailResDto response;
+		if (userPrincipal == null) {
+			response = userService.findUser(username, null);
+		} else {
+			response = userService.findUser(username, userPrincipal.getId());
+		}
+		return ResponseEntity.ok(response);
+	}
+
+	@Override
 	@PostMapping
 	public ResponseEntity<UserCreateResDto> createUser(@RequestBody @Valid UserCreateReqDto request) {
 		UserCreateResDto userCreateResDto = userService.createUser(request);
@@ -38,17 +47,19 @@ public class UserController implements UserApi {
 	}
 
 	@Override
-	@PostMapping("/login")
-	public ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request) {
-		return ResponseEntity.ok(userService.loginUser(request));
+	@PatchMapping("/me/update")
+	public ResponseEntity<UserProfileUpdateResDto> updateProfile(
+			@RequestBody @Valid UserProfileUpdateReqDto request,
+			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+		return ResponseEntity.ok(userService.updateProfile(userPrincipal.getUsername(), request));
 	}
 
 	@Override
-	@PatchMapping("/me/update")
-	public ResponseEntity<UserUpdateResDto> updateUser(
-			@RequestBody @Valid UserUpdateReqDto request,
+	@PatchMapping("/me/password/update")
+	public ResponseEntity<UserPasswordUpdateResDto> updatePassword(
+			@RequestBody @Valid UserPasswordUpdateReqDto request,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		return ResponseEntity.ok(userService.updateUser(userPrincipal.getId(), request));
+		return ResponseEntity.ok(userService.updatePassword(userPrincipal.getUsername(), request));
 	}
 
 	@Override
@@ -56,7 +67,7 @@ public class UserController implements UserApi {
 	public ResponseEntity<UserStatusUpdateResDto> updateUserStatus(
 			@RequestBody @Valid UserStatusUpdateReqDto request,
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
-		return ResponseEntity.ok(userService.updateUserStatus(userPrincipal.getId(), request));
+		return ResponseEntity.ok(userService.updateUserStatus(userPrincipal.getUsername(), request));
 	}
 
 }

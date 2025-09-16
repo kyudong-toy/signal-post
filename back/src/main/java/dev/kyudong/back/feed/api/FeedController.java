@@ -21,7 +21,7 @@ public class FeedController implements FeedApi {
 	public ResponseEntity<FeedListResDto> findFeeds(
 			@AuthenticationPrincipal CustomUserPrincipal userPrincipal,
 			@RequestParam(required = false, defaultValue = "0") int page,
-			@CookieValue(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId
+			@RequestAttribute(name = GuestIdInterceptor.GUEST_ID_COOKIE_NAME, required = false) String guestId
 	) {
 		boolean isLoggedIn = userPrincipal != null;
 

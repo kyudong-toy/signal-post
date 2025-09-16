@@ -5,6 +5,7 @@ import dev.kyudong.back.feed.api.dto.PostFeedDto;
 import dev.kyudong.back.follow.repository.FollowRepository;
 import dev.kyudong.back.post.application.port.out.web.PostFeedQueryPort;
 import dev.kyudong.back.user.domain.User;
+import dev.kyudong.back.user.service.UserReaderService;
 import dev.kyudong.back.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class FeedGenerator {
 	private final ExecutorService feedExecutorService;
 	private final TransactionTemplate transactionTemplate;
 	private final RedissonClient redissonClient;
-	private final UserService userService;
+	private final UserReaderService userReaderService;
 
 	/**
 	 * 사용자의 피드 목록을 생성합니다
@@ -46,22 +47,22 @@ public class FeedGenerator {
 	 * @param feedKey	저장될 키
 	 */
 	@Async
-	public void generateAndCacheFeedForUser(Long userId, String feedKey) {
-		log.info("사용자 피드목록을 생성을 시작합니다: {}", feedKey);
+	protected void generateAndCacheFeedForUser(Long userId, String feedKey) {
+		log.debug("사용자 피드목록을 생성을 시작합니다: {}", feedKey);
 
-		// 최신 게시글
+		// 최신 게시글 (48시간 내에 생성된 게시글)
 		CompletableFuture<List<PostFeedDto>> future1 = CompletableFuture.supplyAsync(() ->
 				transactionTemplate.execute(action ->
-						postFeedQueryPort.findRecentPostsWithUser(userId, Instant.now().minus(48, ChronoUnit.HOURS), 50)
+						postFeedQueryPort.findRecentPosts(userId, Instant.now().minus(48, ChronoUnit.HOURS), 100)
 				), feedExecutorService);
 
-		// 인기가 많은 게시글
+		// 인기가 많은 게시글 (30일 내에 인기가 많은 게시글)
 		CompletableFuture<List<PostFeedDto>> future2 = CompletableFuture.supplyAsync(() ->
 				transactionTemplate.execute(action ->
-						postFeedQueryPort.findPopularPostsWithUser(userId, Instant.now(), 100)
+						postFeedQueryPort.findPopularPosts(userId, Instant.now().minus(30, ChronoUnit.DAYS), 200)
 				), feedExecutorService);
 
-		// 예전에 나온 게시글
+		// 예전에 나온 게시글 (6개월 전 생성된 게시글)
 		CompletableFuture<List<PostFeedDto>> future3 = CompletableFuture.supplyAsync(() -> transactionTemplate.execute(action -> {
 			Set<Long> randomPostIds = redissonClient.getSet("feed:random_post_ids");
 
@@ -69,52 +70,59 @@ public class FeedGenerator {
 				return new ArrayList<>();
 			}
 
-			return postFeedQueryPort.findAllByIds(randomPostIds).stream()
-					.filter(dto -> !dto.authorId().equals(userId))
-					.toList();
+			return postFeedQueryPort.findAllByIds(userId, randomPostIds);
 		}), feedExecutorService);
 
 		// 팔로우 피드
 		CompletableFuture<List<PostFeedDto>> future4 = CompletableFuture.supplyAsync(() ->
 				transactionTemplate.execute(action ->
-						postFeedQueryPort.findByFollowingPost(userId, Instant.now().minus(2, ChronoUnit.DAYS), 50)
+						postFeedQueryPort.findByFollowingPost(userId, 200)
 				), feedExecutorService);
 
 		CompletableFuture.allOf(future1, future2, future3, future4)
-				.thenRun(() -> {
-					String seenKey = "feed_seen:user" + userId;
+			.thenRun(() -> {
+				transactionTemplate.execute(status -> {
+					try {
+						User user = userReaderService.getUserReference(userId);
+						List<Long> followingList = followRepository.findByFollowingWithFollower(user).stream()
+								.map(f -> f.getFollowing().getId())
+								.toList();
 
-					User user = userService.getUserProxy(userId);
-					List<Long> followingList = followRepository.findByFollowingWithFollower(user).stream()
-							.map(f -> f.getFollowing().getId())
-							.toList();
+						String seenKey = "feed_seen:user" + userId;
+						RBloomFilter<Long> seenFilter = redissonClient.getBloomFilter(seenKey);
+						if (!seenFilter.isExists()) {
+							seenFilter.tryInit(10_000, 0.01);
+						}
 
-					RBloomFilter<Long> seenFilter = redissonClient.getBloomFilter(seenKey);
-					if (!seenFilter.isExists()) {
-						seenFilter.tryInit(10_000, 0.01);
+						List<ItemWithScore> candidates = Stream.of(future1, future2, future3, future4)
+								.flatMap(f -> f.join().stream())
+								.distinct()
+								.filter(dto -> !seenFilter.contains(dto.postId()))
+								.map(dto -> new ItemWithScore(dto, calculatePostScore(dto, followingList)))
+								.sorted(Comparator.comparingDouble(ItemWithScore::postScore).reversed())
+								.toList();
+
+						RList<String> feedCache = redissonClient.getList(feedKey);
+						feedCache.clear();
+						if (!candidates.isEmpty()) {
+							List<String> cachePostIds =  candidates.stream()
+									.map(itemWithScore -> String.valueOf(itemWithScore.detailResDto().postId()))
+									.toList();
+							feedCache.addAll(cachePostIds);
+						}
+
+						feedCache.expire(Duration.ofMinutes(30));
+					} catch (Exception e) {
+						log.error("사용자 피드 생성 중 오류가 발생했습니다", e);
+						status.setRollbackOnly();
 					}
-
-					List<ItemWithScore> candidates = Stream.of(future1, future2, future3, future4)
-							.flatMap(f -> f.join().stream())
-							.distinct()
-							.filter(dto -> !seenFilter.contains(dto.postId()))
-							.map(dto -> new ItemWithScore(dto, calculatePostScore(dto, followingList)))
-							.sorted(Comparator.comparingDouble(ItemWithScore::postScore).reversed())
-							.toList();
-
-					List<String> cachePostIds =  candidates.stream()
-							.map(itemWithScore -> String.valueOf(itemWithScore.detailResDto().postId()))
-							.toList();
-
-					RList<String> feedCache = redissonClient.getList(feedKey);
-					feedCache.clear();
-					feedCache.addAll(cachePostIds);
-					feedCache.expire(Duration.ofMinutes(30));
-				})
-				.exceptionally(throwable -> {
-					log.error("사용자 피드 생성 중 오류가 발생했습니다", throwable);
 					return null;
 				});
+			})
+			.exceptionally(throwable -> {
+				log.error("사용자 피드 생성 중 오류가 발생했습니다", throwable);
+				return null;
+			});
 	}
 
 	/**
@@ -124,21 +132,21 @@ public class FeedGenerator {
 	 */
 	@Async
 	protected void generateAndCacheFeedForGuest(String guestId, String feedKey) {
-		log.info("게스트 피드목록을 생성을 시작합니다: {}", feedKey);
+		log.debug("게스트 피드목록을 생성을 시작합니다: {}", feedKey);
 
-		// 최신 게시글
+		// 최신 게시글 (48시간 내에 생성된 게시글)
 		CompletableFuture<List<PostFeedDto>> future1 = CompletableFuture.supplyAsync(() ->
 				transactionTemplate.execute(action ->
-						postFeedQueryPort.findRecentPostsWithGuest(Instant.now().minus(48, ChronoUnit.HOURS), 50)
+						postFeedQueryPort.findRecentPosts(Instant.now().minus(48, ChronoUnit.HOURS), 100)
 				), feedExecutorService);
 
-		// 인기가 많은 게시글
+		// 인기가 많은 게시글 (30일 내에 인기가 많은 게시글)
 		CompletableFuture<List<PostFeedDto>> future2 = CompletableFuture.supplyAsync(() ->
 				transactionTemplate.execute(action ->
-						postFeedQueryPort.findPopularPostsWithGuest(Instant.now().minus(3, ChronoUnit.DAYS), 100)
+						postFeedQueryPort.findPopularPosts(Instant.now().minus(30, ChronoUnit.DAYS), 200)
 				), feedExecutorService);
 
-		// 예전에 나온 게시글
+		// 예전에 나온 게시글 (6개월 전 생성된 게시글)
 		CompletableFuture<List<PostFeedDto>> future3 = CompletableFuture.supplyAsync(() -> transactionTemplate.execute(action -> {
 			Set<Long> randomPostIds = redissonClient.getSet("feed:random_post_ids");
 
@@ -150,35 +158,44 @@ public class FeedGenerator {
 		}), feedExecutorService);
 
 		CompletableFuture.allOf(future1, future2, future3)
-				.thenRun(() -> {
-					String seenKey = "feed_seen:guest" + guestId;
+			.thenRun(() -> {
+				transactionTemplate.execute((status) -> {
+					try {
+						String seenKey = "feed_seen:guest" + guestId;
+						RBloomFilter<Long> seenFilter = redissonClient.getBloomFilter(seenKey);
+						if (!seenFilter.isExists()) {
+							seenFilter.tryInit(10_000, 0.01);
+						}
 
-					RBloomFilter<Long> seenFilter = redissonClient.getBloomFilter(seenKey);
-					if (!seenFilter.isExists()) {
-						seenFilter.tryInit(10_000, 0.01);
+						List<ItemWithScore> candidates = Stream.of(future1, future2, future3)
+								.flatMap(f -> f.join().stream())
+								.distinct()
+								.filter(dto -> !seenFilter.contains(dto.postId()))
+								.map(p -> new ItemWithScore(p, calculatePostScore(p, new ArrayList<>())))
+								.sorted(Comparator.comparingDouble(ItemWithScore::postScore).reversed())
+								.toList();
+
+						RList<String> feedCache = redissonClient.getList(feedKey);
+						feedCache.clear();
+						if (!candidates.isEmpty()) {
+							List<String> cachePostIds =  candidates.stream()
+									.map(itemWithScore -> String.valueOf(itemWithScore.detailResDto().postId()))
+									.toList();
+							feedCache.addAll(cachePostIds);
+						}
+
+						feedCache.expire(Duration.ofMinutes(60));
+					} catch (Exception e) {
+						log.error("게스트 피드 생성 중 오류가 발생했습니다", e);
+						status.setRollbackOnly();
 					}
-
-					List<ItemWithScore> candidates = Stream.of(future1, future2, future3)
-							.flatMap(f -> f.join().stream())
-							.distinct()
-							.filter(dto -> !seenFilter.contains(dto.postId()))
-							.map(p -> new ItemWithScore(p, calculatePostScore(p, new ArrayList<>())))
-							.sorted(Comparator.comparingDouble(ItemWithScore::postScore).reversed())
-							.toList();
-
-					List<String> cachePostIds =  candidates.stream()
-							.map(itemWithScore -> String.valueOf(itemWithScore.detailResDto().postId()))
-							.toList();
-
-					RList<String> feedCache = redissonClient.getList(feedKey);
-					feedCache.clear();
-					feedCache.addAll(cachePostIds);
-					feedCache.expire(Duration.ofMinutes(60));
-				})
-				.exceptionally(throwable -> {
-					log.error("게스트 피드 생성 중 오류가 발생했습니다", throwable);
 					return null;
 				});
+			})
+			.exceptionally(throwable -> {
+				log.error("게스트 피드 생성 중 오류가 발생했습니다", throwable);
+				return null;
+			});
 	}
 
 	/**
