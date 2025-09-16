@@ -2,20 +2,18 @@ package dev.kyudong.back.post.tag;
 
 import dev.kyudong.back.post.application.port.out.web.TagPersistencePort;
 import dev.kyudong.back.post.application.service.web.TagService;
+import dev.kyudong.back.testhelper.base.UnitTestBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.mockito.BDDMockito.*;
 import static org.assertj.core.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
-public class TagServiceTest {
+public class TagServiceTest extends UnitTestBase {
 
 	@InjectMocks
 	private TagService tagService;
@@ -38,6 +36,5 @@ public class TagServiceTest {
 		// then
 		assertThat(tags.size()).isEqualTo(3);
 	}
-
 
 }

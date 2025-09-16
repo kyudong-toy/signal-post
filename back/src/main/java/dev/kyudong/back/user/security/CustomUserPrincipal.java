@@ -2,6 +2,7 @@ package dev.kyudong.back.user.security;
 
 import dev.kyudong.back.user.domain.UserRole;
 import dev.kyudong.back.user.domain.UserStatus;
+import io.jsonwebtoken.Claims;
 import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,19 +19,29 @@ public class CustomUserPrincipal implements UserDetails, Principal, Serializable
 
 	private final String username;
 
-	private final String password;
-
 	private final boolean isEnabled;
 
 	private final Collection<? extends GrantedAuthority> authorities;
 
 	@Builder
-	private CustomUserPrincipal(Long id, String username, String password, UserStatus status, UserRole role) {
+	private CustomUserPrincipal(Long id, String username, UserStatus status, UserRole role) {
 		this.id = id;
 		this.username = username;
-		this.password = password;
 		this.isEnabled = status.equals(UserStatus.ACTIVE);
 		this.authorities = mapRolesToAuthorities(role);
+	}
+
+	public static CustomUserPrincipal createPrincipalFromClaims(Claims claims) {
+		String username = claims.getSubject();
+		Long id = claims.get("id", Long.class);
+
+		String roleString = claims.get("role", String.class);
+		UserRole role = UserRole.valueOf(roleString);
+
+		String statusString = claims.get("status", String.class);
+		UserStatus status = UserStatus.valueOf(statusString);
+
+		return new CustomUserPrincipal(id, username, status, role);
 	}
 
 	/**
@@ -52,9 +63,14 @@ public class CustomUserPrincipal implements UserDetails, Principal, Serializable
 		return this.authorities;
 	}
 
+	/**
+	 * 인증 객체에서는 비밀번호를 사용하지 않습니다
+	 * @return null
+	 */
+	@Deprecated
 	@Override
 	public String getPassword() {
-		return this.password;
+		return null;
 	}
 
 	@Override

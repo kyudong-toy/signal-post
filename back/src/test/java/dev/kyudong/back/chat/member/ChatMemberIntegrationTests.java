@@ -87,7 +87,7 @@ public class ChatMemberIntegrationTests {
 
 		// when
 		mockMvc.perform(post("/api/v1/chatroom/{roomId}/members", chatRoom.getId())
-							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 					.andExpect(status().isNoContent())
@@ -113,7 +113,7 @@ public class ChatMemberIntegrationTests {
 
 		// when
 		mockMvc.perform(delete("/api/v1/chatroom/{roomId}/members/me", chatRoom.getId())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user)))
 				.andExpect(status().isNoContent())
 				.andDo(print())
 				.andReturn();

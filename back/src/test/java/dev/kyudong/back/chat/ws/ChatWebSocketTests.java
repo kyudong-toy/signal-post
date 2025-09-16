@@ -126,8 +126,8 @@ public class ChatWebSocketTests {
 
 		BlockingQueue<String> messageQueueA = new LinkedBlockingQueue<>();
 		BlockingQueue<String> messageQueueB = new LinkedBlockingQueue<>();
-		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.generateToken(userA), messageQueueA);
-		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.generateToken(userB), messageQueueB);
+		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.createAccessToken(userA), messageQueueA);
+		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.createAccessToken(userB), messageQueueB);
 
 		// 이벤트 생성
 		ChatMember sender = chatMemberRepository.findByUserAndChatRoom(userA, chatRoom).orElseThrow();
@@ -163,8 +163,8 @@ public class ChatWebSocketTests {
 
 		BlockingQueue<String> messageQueueA = new LinkedBlockingQueue<>();
 		BlockingQueue<String> messageQueueB = new LinkedBlockingQueue<>();
-		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.generateToken(userA), messageQueueA);
-		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.generateToken(userB), messageQueueB);
+		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.createAccessToken(userA), messageQueueA);
+		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.createAccessToken(userB), messageQueueB);
 
 		// 이벤트 생성
 		ChatMember sender = chatMemberRepository.findByUserAndChatRoom(userA, chatRoom).orElseThrow();
@@ -201,8 +201,8 @@ public class ChatWebSocketTests {
 
 		BlockingQueue<String> messageQueueA = new LinkedBlockingQueue<>();
 		BlockingQueue<String> messageQueueB = new LinkedBlockingQueue<>();
-		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.generateToken(userA), messageQueueA);
-		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.generateToken(userB), messageQueueB);
+		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.createAccessToken(userA), messageQueueA);
+		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.createAccessToken(userB), messageQueueB);
 
 		// 이벤트 생성
 		ChatRoomCreateEvent payload = ChatRoomCreateEvent.from(chatRoom);
@@ -230,8 +230,8 @@ public class ChatWebSocketTests {
 
 		BlockingQueue<String> messageQueueA = new LinkedBlockingQueue<>();
 		BlockingQueue<String> messageQueueB = new LinkedBlockingQueue<>();
-		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.generateToken(chatMember), messageQueueA);
-		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.generateToken(inviteUser), messageQueueB);
+		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.createAccessToken(chatMember), messageQueueA);
+		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.createAccessToken(inviteUser), messageQueueB);
 
 		// 이벤트 생성
 		Set<ChatMember> newMembers = createTestChatMembers(
@@ -273,8 +273,8 @@ public class ChatWebSocketTests {
 
 		BlockingQueue<String> messageQueueA = new LinkedBlockingQueue<>();
 		BlockingQueue<String> messageQueueB = new LinkedBlockingQueue<>();
-		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.generateToken(chatMember), messageQueueA);
-		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.generateToken(leaveUser), messageQueueB);
+		WebSocketSession sessionA = connectWebSocketClient(jwtUtil.createAccessToken(chatMember), messageQueueA);
+		WebSocketSession sessionB = connectWebSocketClient(jwtUtil.createAccessToken(leaveUser), messageQueueB);
 
 		// 이벤트 생성
 		ChatMemberLeftEvent event = ChatMemberLeftEvent.of(chatRoom.getId(), leaveUser.getId(), chatRoom.getChatMembers());

@@ -9,8 +9,6 @@ import java.util.Optional;
 
 public interface InteractionRepository extends JpaRepository<Interaction, Long> {
 
-	boolean existsByUserAndTargetId(User user, Long targetId);
-
 	Optional<Interaction> findByUserAndTargetIdAndTargetType(User user, Long targetId, TargetType targetType);
 
 }

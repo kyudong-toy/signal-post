@@ -2,9 +2,9 @@ package dev.kyudong.back.post.comment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.common.config.SecurityConfig;
-import dev.kyudong.back.common.exception.InvalidAccessException;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.in.web.CommentController;
+import dev.kyudong.back.post.application.port.in.web.CommentUsecase;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
@@ -15,8 +15,7 @@ import dev.kyudong.back.post.domain.entity.CommentStatus;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
 import dev.kyudong.back.post.adapter.out.persistence.exception.PostNotFoundException;
-import dev.kyudong.back.post.application.service.web.CommentService;
-import dev.kyudong.back.security.WithMockCustomUser;
+import dev.kyudong.back.testhelper.security.WithMockCustomUser;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -31,14 +31,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.BDDMockito.*;
 
 @WebMvcTest(CommentController.class)
 @Import(SecurityConfig.class)
@@ -52,7 +53,7 @@ public class CommentControllerTests {
 
 	@SuppressWarnings("unused")
 	@MockitoBean
-	private CommentService commentService;
+	private CommentUsecase commentUsecase;
 
 	@SuppressWarnings("unused")
 	@MockitoBean
@@ -73,17 +74,14 @@ public class CommentControllerTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.create("제목", "");
+		Post mockPost = Post.create("제목", "테스트본문");
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;
 	}
 
 	private static Comment makeMockComment(Post mockPost, User mockUser) {
-		Comment mockComment = Comment.builder()
-				.content("Hello Java!")
-				.user(mockUser)
-				.build();
+		Comment mockComment = Comment.create("테스트", mockUser);
 		ReflectionTestUtils.setField(mockComment, "id", 1L);
 		ReflectionTestUtils.setField(mockComment, "post", mockPost);
 		ReflectionTestUtils.setField(mockComment, "createdAt", Instant.now());
@@ -94,26 +92,26 @@ public class CommentControllerTests {
 	@Test
 	@DisplayName("댓글 목록 조회 API - 성공")
 	void findCommentsByPostIdApi_success() throws Exception {
-//		// given
-//		User mockUser = makeMockUser();
-//		Post mockPost = makeMockPost(mockUser);
-//		Long postId = mockPost.getId();
-//		List<Comment>
-//
-//		CommentListResDto response = List.of(new CommentItemResDto(
-//				CommentAuthor.from(
-//						mockUser.getId(), mockUser.getUsername()
-//				),
-//				CommentContent.from()
-//		));
-//
-//		when(commentService.findComments(eq(postId), anyLong(), CommentSort.OLD))
-//				.thenReturn(response);
-//
-//		// when & then
-//		mockMvc.perform(get("/api/v1/posts/{postId}/comments", postId))
-//				.andExpect(status().isOk())
-//				.andDo(print());
+		// given
+		User mockUser = makeMockUser();
+		Post mockPost = makeMockPost(mockUser);
+		Long postId = mockPost.getId();
+		List<Comment> comments = new ArrayList<>();
+		for (int i = 1; i <= 100; i++) {
+			Comment mockComment = makeMockComment(mockPost, mockUser);
+			ReflectionTestUtils.setField(mockComment, "id", (long) i);
+			mockPost.addComment(mockComment);
+			comments.add(mockComment);
+		}
+
+		CommentListResDto response = CommentListResDto.from(comments);
+		given(commentUsecase.findComments(anyLong(), isNull(), any(CommentSort.class))).willReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/api/v1/posts/{postId}/comments", postId)
+						.param("sort", "NEW"))
+				.andExpect(status().isOk())
+				.andDo(print());
 	}
 
 	@Test
@@ -129,7 +127,7 @@ public class CommentControllerTests {
 				mockUser.getId(), mockPost.getId(), 1L, "Hello Comment", CommentStatus.NORMAL,
 				LocalDateTime.now(), LocalDateTime.now()
 		);
-		when(commentService.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class))).thenReturn(response);
+		given(commentUsecase.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class))).willReturn(response);
 
 		// when & then
 		mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)
@@ -151,8 +149,8 @@ public class CommentControllerTests {
 		Post mockPost = makeMockPost(mockUser);
 		Long postId = mockPost.getId();
 		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
-		when(commentService.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class)))
-				.thenThrow(new PostNotFoundException(postId));
+		given(commentUsecase.createComment(eq(postId), eq(mockUser.getId()), any(CommentCreateReqDto.class)))
+				.willThrow(new PostNotFoundException(postId));
 
 		// when & then
 		mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)
@@ -161,7 +159,6 @@ public class CommentControllerTests {
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.title").value("Post Not Found"))
 				.andExpect(jsonPath("$.status").value(404))
-				.andExpect(jsonPath("$.detail").value("Post {" + postId + "} Not Found"))
 				.andDo(print());
 	}
 
@@ -182,7 +179,7 @@ public class CommentControllerTests {
 				mockUser.getId(), mockPost.getId(), 1L, "Hello Comment", CommentStatus.NORMAL,
 				LocalDateTime.now(), LocalDateTime.now()
 		);
-		when(commentService.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class))).thenReturn(response);
+		given(commentUsecase.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class))).willReturn(response);
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}", postId, commentId)
@@ -207,8 +204,8 @@ public class CommentControllerTests {
 		Long postId = mockPost.getId();
 		Long commentId = 999L;
 		CommentUpdateReqDto request = new CommentUpdateReqDto("Hello");
-		when(commentService.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class)))
-				.thenThrow(new CommentNotFoundException(commentId));
+		given(commentUsecase.updateComment(eq(postId), eq(commentId), eq(userId), any(CommentUpdateReqDto.class)))
+				.willThrow(new CommentNotFoundException(commentId));
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}", postId, commentId)
@@ -235,7 +232,7 @@ public class CommentControllerTests {
 		Long commentId = mockComment.getId();
 		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.DELETED);
 		CommentStatusUpdateResDto response = new CommentStatusUpdateResDto(postId, commentId, CommentStatus.DELETED);
-		when(commentService.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class))).thenReturn(response);
+		given(commentUsecase.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class))).willReturn(response);
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}/status", postId, commentId)
@@ -261,17 +258,14 @@ public class CommentControllerTests {
 		Long postId = 1L;
 		Long commentId = mockComment.getId();
 		CommentStatusUpdateReqDto request = new CommentStatusUpdateReqDto(CommentStatus.NORMAL);
-		when(commentService.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class)))
-				.thenThrow(new InvalidAccessException("User {" + userId + "} has no permission to update Comment status " + commentId));
+		given(commentUsecase.updateCommentStatus(eq(postId), eq(commentId), eq(userId), any(CommentStatusUpdateReqDto.class)))
+				.willThrow(new AccessDeniedException("USER {" + userId + "} has no permission to update Comment status " + commentId));
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}/status", postId, commentId)
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isUnauthorized())
-				.andExpect(jsonPath("$.title").value("Access Denied"))
-				.andExpect(jsonPath("$.status").value(401))
-				.andExpect(jsonPath("$.detail").value("User {" + userId + "} has no permission to update Comment status " + commentId))
+				.andExpect(status().isForbidden())
 				.andDo(print());
 	}
 

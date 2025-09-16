@@ -21,7 +21,7 @@ public record ChatMessageResDto(
 		Instant cursorTime = null;
 		boolean hasNext = chatMessages.hasNext();
 
-		if (hasNext) {
+		if (hasNext && !content.isEmpty()) {
 			ChatMessage lastroom = chatMessages.getContent().get(chatMessages.getContent().size() - 1);
 			cursorId = lastroom.getId();
 			cursorTime = lastroom.getCreatedAt();

@@ -72,7 +72,7 @@ public class ChatRoomIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(get("/api/v1/chatroom")
-								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1)))
+								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1)))
 						.andExpect(status().isOk())
 						.andDo(print())
 						.andReturn();
@@ -96,7 +96,7 @@ public class ChatRoomIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/chatroom")
-								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user1))
+								.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user1))
 								.contentType(MediaType.APPLICATION_JSON.toString())
 								.content(objectMapper.writeValueAsString(request)))
 						.andExpect(status().isCreated())

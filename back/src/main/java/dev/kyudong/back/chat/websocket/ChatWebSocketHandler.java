@@ -25,7 +25,7 @@ public final class ChatWebSocketHandler extends BaseWebSocketHandler {
 			try {
 				String message=  objectMapper.writeValueAsString(payload);
 				session.sendMessage(new TextMessage(message));
-				log.debug("메시지를 전송했습니다: userId={}. content={}", userId, payload);
+				log.debug("메시지를 전송했습니다: userId={}. contents={}", userId, payload);
 			} catch (JsonProcessingException j) {
 				log.error("메시지 파싱에 실패했습니다: payload={}", payload, j);
 			} catch (IOException i) {

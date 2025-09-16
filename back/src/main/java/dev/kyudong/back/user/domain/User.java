@@ -32,6 +32,18 @@ public class User {
 	@Column(name = "PASS_WORD", nullable = false, length = 150)
 	private String password;
 
+	@Column(name = "DISPLAY_NAME", length = 30)
+	private String displayName;
+
+	@Column(name = "USER_BIO", length = 150)
+	private String bio;
+
+	@Column(name = "PROFILE_IMAGE_URL")
+	private String profileImageUrl;
+
+	@Column(name = "BACKGROUND_IMAGE_URL")
+	private String backgroundImageUrl;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false, length = 20)
 	private UserStatus status;
@@ -57,8 +69,15 @@ public class User {
 		this.username = username;
 		this.password = encodedPassword;
 		this.status = UserStatus.ACTIVE;
-		this.createdAt = Instant.now();
-		this.role = Objects.requireNonNullElse(role, UserRole.USER);
+		this.role = role;
+	}
+
+	public static User create(String username, String rawPassword, String encodedPassword) {
+		return new User(username, rawPassword, encodedPassword, UserRole.USER);
+	}
+
+	public static User create(String username, String rawPassword, String encodedPassword, UserRole role) {
+		return new User(username, rawPassword, encodedPassword, role);
 	}
 
 	private void validateUsername(String username) {
@@ -107,6 +126,22 @@ public class User {
 		post.associateUser(this);
 	}
 
+	public void updateDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public void updateBio(String bio) {
+		this.bio = bio;
+	}
+
+	public void updateProfileImage(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
+	}
+
+	public void updateBackGroundImage(String backGroundImageUrl) {
+		this.backgroundImageUrl = backGroundImageUrl;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -114,13 +149,12 @@ public class User {
 
 		User user = (User) o;
 
-		if (!Objects.equals(id, user.id)) return false;
-		return Objects.equals(username, user.username);
+		return Objects.equals(id, user.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(username);
+		return Objects.hash(id);
 	}
 
 }

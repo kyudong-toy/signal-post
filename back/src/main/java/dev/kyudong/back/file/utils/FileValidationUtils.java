@@ -58,7 +58,7 @@ public class FileValidationUtils {
 			throw new InvalidFileException("파일 확장자와 내용이 일치하지 않습니다.");
 		}
 
-		log.info("파일 타입 검증 통과완료: uploaderId={}, fileName={}, mimeType={}",
+		log.debug("파일 타입 검증 통과완료: uploaderId={}, fileName={}, mimeType={}",
 				uploaderId, originalFileName, mimeType);
 	}
 

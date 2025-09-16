@@ -1,14 +1,14 @@
 package dev.kyudong.back.follow;
 
+import dev.kyudong.back.follow.api.res.FollowRelationResDto;
 import dev.kyudong.back.common.config.SecurityConfig;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.follow.api.FollowController;
-import dev.kyudong.back.follow.api.res.FollowAcceptResDto;
 import dev.kyudong.back.follow.api.res.FollowCreateResDto;
 import dev.kyudong.back.follow.domain.FollowStatus;
 import dev.kyudong.back.follow.exception.AlreadyFollowException;
 import dev.kyudong.back.follow.service.FollowService;
-import dev.kyudong.back.security.WithMockCustomUser;
+import dev.kyudong.back.testhelper.security.WithMockCustomUser;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,7 +63,7 @@ public class FollowControllerTests {
 		final Long followerId = 1L;
 		User mockFollowing = makeMockUser(2L, "ckznds");
 		FollowCreateResDto response = new FollowCreateResDto(1L, followerId, mockFollowing.getId(), FollowStatus.PENDING);
-		given(followService.createFollow(followerId, mockFollowing.getUsername())).willReturn(response);
+		given(followService.requestFollow(followerId, mockFollowing.getUsername())).willReturn(response);
 
 		// when & then
 		mockMvc.perform(post("/api/v1/users/{username}/follow", mockFollowing.getUsername()))
@@ -81,7 +81,7 @@ public class FollowControllerTests {
 		// given
 		User mockFollower = makeMockUser(1L, "dnz1dd");
 		User mockFollowing = makeMockUser(2L, "ckznds");
-		given(followService.createFollow(mockFollower.getId(), mockFollowing.getUsername()))
+		given(followService.requestFollow(mockFollower.getId(), mockFollowing.getUsername()))
 				.willThrow(AlreadyFollowException.class);
 
 		// when & then
@@ -99,8 +99,8 @@ public class FollowControllerTests {
 		// given
 		final Long followerId = 1L;
 		User mockFollowing = makeMockUser(2L, "ckznds");
-		FollowAcceptResDto response = new FollowAcceptResDto(1L, followerId, mockFollowing.getId(), FollowStatus.FOLLOWING);
-		given(followService.acceptFollow(followerId, mockFollowing.getUsername())).willReturn(response);
+		FollowRelationResDto response = new FollowRelationResDto(1L, followerId, mockFollowing.getId(), FollowStatus.FOLLOWING);
+		given(followService.accept(followerId, mockFollowing.getUsername())).willReturn(response);
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/users/{username}/accept", mockFollowing.getUsername()))
@@ -118,7 +118,7 @@ public class FollowControllerTests {
 		// given
 		User mockFollower = makeMockUser(1L, "dnz1dd");
 		User mockFollowing = makeMockUser(2L, "ckznds");
-		given(followService.createFollow(mockFollower.getId(), mockFollowing.getUsername()))
+		given(followService.requestFollow(mockFollower.getId(), mockFollowing.getUsername()))
 				.willThrow(AlreadyFollowException.class);
 
 		// when & then

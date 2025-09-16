@@ -25,7 +25,7 @@ public class NotificationQuery {
 	private static final QPost p = QPost.post;
 	private static final QComment c = QComment.comment;
 
-	public List<NotificationQueryDto> findNotifications(Long userId, Long cursorId) {
+	public List<NotificationQueryDto> findNotifications(Long receiverId, Long cursorId) {
 		return queryFactory
 				.select(Projections.constructor(
 						NotificationQueryDto.class,
@@ -47,7 +47,7 @@ public class NotificationQuery {
 				.leftJoin(n.post, p)
 				.leftJoin(n.comment, c)
 				.where(
-						n.receiver.id.eq(userId),
+						n.receiver.id.eq(receiverId),
 						cursorId != null ? n.id.lt(cursorId) : null,
 						n.isRead.isFalse()
 				)

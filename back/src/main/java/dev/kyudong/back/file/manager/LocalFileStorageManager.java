@@ -40,7 +40,7 @@ public class LocalFileStorageManager implements FileStorageManager {
 		// 파일 업로드
 		multipartFile.transferTo(destinationPath.toFile());
 
-		log.info("파일이 정상적으로 업로드 되었습니다: path={}, storedFileName={}", destinationPath, storedFileName);
+		log.debug("파일이 정상적으로 업로드 되었습니다: path={}, storedFileName={}", destinationPath, storedFileName);
 		return destinationPath.toString();
 	}
 

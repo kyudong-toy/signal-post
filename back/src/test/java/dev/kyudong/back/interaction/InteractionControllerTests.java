@@ -9,10 +9,9 @@ import dev.kyudong.back.interaction.api.dto.res.InteractionResDto;
 import dev.kyudong.back.interaction.domain.InteractionType;
 import dev.kyudong.back.interaction.domain.TargetType;
 import dev.kyudong.back.interaction.service.InteractionService;
-import dev.kyudong.back.post.domain.entity.Category;
 import dev.kyudong.back.post.domain.entity.Post;
 import dev.kyudong.back.post.adapter.out.persistence.exception.CommentNotFoundException;
-import dev.kyudong.back.security.WithMockCustomUser;
+import dev.kyudong.back.testhelper.security.WithMockCustomUser;
 import dev.kyudong.back.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,7 +63,7 @@ public class InteractionControllerTests {
 	}
 
 	private static Post makeMockPost(User mockUser) {
-		Post mockPost = Post.create("제목", "", Category.builder().build());
+		Post mockPost = Post.create("제목", "테스트");
 		ReflectionTestUtils.setField(mockPost, "id", 1L);
 		ReflectionTestUtils.setField(mockPost, "user", mockUser);
 		return mockPost;

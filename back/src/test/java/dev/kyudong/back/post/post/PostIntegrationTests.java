@@ -2,7 +2,7 @@ package dev.kyudong.back.post.post;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.kyudong.back.IntegrationTestBase;
+import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.interceptor.GuestIdInterceptor;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.adapter.out.persistence.repository.TagRepository;
@@ -101,7 +101,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when & then
 		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 						.cookie(cookie))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.postId").value(postId))
@@ -126,7 +126,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when & then
 		mockMvc.perform(get("/api/v1/posts/{postId}", postId)
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 						.cookie(cookie))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.postId").value(postId))
@@ -148,7 +148,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts")
-							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 						.andExpect(status().isCreated())
@@ -188,7 +188,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 						.contentType(MediaType.APPLICATION_JSON.toString())
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isCreated())
@@ -232,7 +232,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/update", savedPost.getId())
-							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 						.andExpect(status().isOk())
@@ -263,7 +263,7 @@ public class PostIntegrationTests extends IntegrationTestBase {
 
 		// when & then
 		mockMvc.perform(patch("/api/v1/posts/{postId}/status", savedPost.getId())
-							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+							.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 							.contentType(MediaType.APPLICATION_JSON.toString())
 							.content(objectMapper.writeValueAsString(request)))
 					.andExpect(status().isOk())

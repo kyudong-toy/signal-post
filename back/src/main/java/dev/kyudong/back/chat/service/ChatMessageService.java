@@ -14,13 +14,13 @@ import dev.kyudong.back.chat.exception.ChatRoomNotFoundException;
 import dev.kyudong.back.chat.repository.ChatMessageRepository;
 import dev.kyudong.back.chat.repository.ChatMemberRepository;
 import dev.kyudong.back.chat.repository.ChatRoomRepository;
-import dev.kyudong.back.common.exception.InvalidAccessException;
 import dev.kyudong.back.user.domain.User;
-import dev.kyudong.back.user.repository.UserRepository;
+import dev.kyudong.back.user.service.UserReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +34,8 @@ public class ChatMessageService {
 	private final ChatMessageRepository chatMessageRepository;
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatMemberRepository chatMemberRepository;
-	private final UserRepository userRepository;
 	private final ChatEventHandler chatEventHandler;
+	private final UserReaderService userReaderService;
 
 	@Transactional(readOnly = true)
 	public ChatMessageResDto findMessages(final Long roomId, Long cursorId, Instant cursorTime) {
@@ -54,7 +54,7 @@ public class ChatMessageService {
 	public void createMessage(final Long userId, final Long roomId, ChatMessageCreateReqDto request) {
 		log.debug("사용자가 메시지를 전송합니다: userId={}, roomId={}", userId, roomId);
 
-		User user = userRepository.getReferenceById(userId);
+		User user = userReaderService.getUserReference(userId);
 		ChatRoom chatRoom = chatRoomRepository.findById(roomId)
 				.orElseThrow(() -> {
 					log.warn("메시지를 전송한 채팅방이 존재하지 않습니다: roomId={}", roomId);
@@ -77,14 +77,14 @@ public class ChatMessageService {
 
 		chatEventHandler.handleMessageCreate(ChatMessageCreateEvent.of(savedChatMessage, chatRoom, sender.getUser()));
 		int size = chatRoom.getChatMembers().size();
-		log.info("메시지를 전송하였습니다: userId={}, roomId={}, size={}", userId, roomId, size);
+		log.debug("메시지를 전송하였습니다: userId={}, roomId={}, size={}", userId, roomId, size);
 	}
 
 	@Transactional
 	public void deleteMessage(final Long userId, final Long roomId, final Long messageId) {
 		log.debug("사용자의 메시지를 삭제합니다: userId={}, roomId={}", userId, roomId);
 
-		User user = userRepository.getReferenceById(userId);
+		User user = userReaderService.getUserReference(userId);
 		ChatRoom chatRoom = chatRoomRepository.findById(roomId)
 				.orElseThrow(() -> {
 					log.warn("메시지를 삭제할 채팅방이 존재하지 않습니다: roomId={}", roomId);
@@ -104,13 +104,13 @@ public class ChatMessageService {
 				});
 
 		if (!chatMessage.getSender().getUser().getId().equals(userId)) {
-			throw new InvalidAccessException("메시지를 삭제할 권한이 없습니다");
+			throw new AccessDeniedException("메시지를 삭제할 권한이 없습니다");
 		}
 
 		chatMessage.delete();
 
 		chatEventHandler.handleMessageDelete(ChatMessageDeleteEvent.of(chatMessage, chatRoom, userId));
-		log.info("메시지를 삭제하였습니다: userId={}, roomId={}", userId, roomId);
+		log.debug("메시지를 삭제하였습니다: userId={}, roomId={}", userId, roomId);
 	}
 
 }

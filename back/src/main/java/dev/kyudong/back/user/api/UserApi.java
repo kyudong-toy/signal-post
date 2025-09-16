@@ -1,13 +1,7 @@
 package dev.kyudong.back.user.api;
 
-import dev.kyudong.back.user.api.dto.req.UserCreateReqDto;
-import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.req.UserStatusUpdateReqDto;
-import dev.kyudong.back.user.api.dto.req.UserUpdateReqDto;
-import dev.kyudong.back.user.api.dto.res.UserCreateResDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
-import dev.kyudong.back.user.api.dto.res.UserStatusUpdateResDto;
-import dev.kyudong.back.user.api.dto.res.UserUpdateResDto;
+import dev.kyudong.back.user.api.dto.req.*;
+import dev.kyudong.back.user.api.dto.res.*;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,14 +12,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 /**
- * User API의 명세를 정의하는 인터페이스입니다.
+ * USER API의 명세를 정의하는 인터페이스입니다.
  * <p>
  * 이 인터페이스의 메소드들은 실제 코드에서 직접 호출되지 않지만,
  * Spring MVC 프레임워크에 의해 런타임 시 동적으로 구현체(Controller)와 연결되어 사용됩니다.
@@ -36,8 +32,13 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @see org.springframework.web.bind.annotation.RestController
  * @see java.lang.SuppressWarnings
  */
-@Tag(name = "User API", description = "사용자 관련 API 명세서")
+@Tag(name = "USER API", description = "사용자 관련 API 명세서")
 public interface UserApi {
+
+	ResponseEntity<UserDetailResDto> findUser(
+			@PathVariable @NotBlank String username,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
+	);
 
 	@SuppressWarnings("unused")
 	@Operation(summary = "사용자 생성 (회원가입)", description = "새로운 사용자를 생성합니다.")
@@ -62,7 +63,7 @@ public interface UserApi {
 									"""
 									{
 										"type": "about:blank",
-										"title": "Duplicate User",
+										"title": "Duplicate USER",
 										"status": 409,
 										"detail": "testUser Already Exists",
 										"instance": "/api/v1/users",
@@ -76,65 +77,11 @@ public interface UserApi {
 	ResponseEntity<UserCreateResDto> createUser(@RequestBody @Valid UserCreateReqDto request);
 
 	@SuppressWarnings("unused")
-	@Operation(summary = "사용자 로그인", description = "새로운 사용자를 생성합니다.")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "로그인 성공",
-					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = UserLoginResDto.class),
-							examples = @ExampleObject(value =
-									"""
-									{
-										"id": 1,
-										"username": "testUser",
-										"status": "ACTIVE"
-									}
-									"""
-							)
-					)
-			),
-			@ApiResponse(responseCode = "404", description = "userName과 일치하는 사용자 찾지 못할 때",
-					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = ProblemDetail.class),
-							examples = @ExampleObject(value =
-									"""
-									{
-										"type": "about:blank",
-										"title": "User Not Found",
-										"status": 404,
-										"detail": "User: {testUser} Not Found",
-										"instance": "/api/v1/users/login",
-										"timestamp": "2025-08-16T05:03:26.747698400Z"
-									}
-									"""
-							)
-					)
-			),
-			@ApiResponse(responseCode = "400", description = "비밀번호를 틀렸을 경우",
-					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = ProblemDetail.class),
-							examples = @ExampleObject(value =
-									"""
-									{
-										"type": "about:blank",
-										"title": "Invalid Input Value",
-										"status": 400,
-										"detail": "Password not Equals",
-										"instance": "/api/v1/users/login",
-										"timestamp": "2025-08-16T05:05:22.280467400Z"
-									}
-									"""
-							)
-					)
-			),
-	})
-	ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request);
-
-	@SuppressWarnings("unused")
-	@Operation(summary = "사용자 정보 수정", description = "사용자의 정보를 수정합니다.")
+	@Operation(summary = "사용자 프로필 수정", description = "사용자의 프로필을 수정합니다.")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "사용자 정보 수정 성공",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = UserUpdateResDto.class),
+							schema = @Schema(implementation = UserProfileUpdateResDto.class),
 							examples = @ExampleObject(value =
 									"""
 									{
@@ -153,9 +100,9 @@ public interface UserApi {
 									"""
 									{
 										"type": "about:blank",
-										"title": "User Not Found",
+										"title": "USER Not Found",
 										"status": 404,
-										"detail": "User: {1} Not Found",
+										"detail": "USER: {1} Not Found",
 										"instance": "/api/v1/users/me",
 										"timestamp": "2025-08-16T05:06:40.722932200Z"
 									}
@@ -164,8 +111,48 @@ public interface UserApi {
 					)
 			),
 	})
-	ResponseEntity<UserUpdateResDto> updateUser(
-			@RequestBody @Valid UserUpdateReqDto request,
+	ResponseEntity<UserProfileUpdateResDto> updateProfile(
+			@RequestBody @Valid UserProfileUpdateReqDto request,
+			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
+	);
+
+	@SuppressWarnings("unused")
+	@Operation(summary = "사용자 비밀번호 수정", description = "사용자의 비밀번호를 수정합니다.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "사용자 비밀번호 수정 성공",
+					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = UserProfileUpdateResDto.class),
+							examples = @ExampleObject(value =
+									"""
+									{
+									  "id": 94,
+									  "username": "testUser",
+									  "token": "jwt토큰들어감"
+									}
+									"""
+							)
+					)
+			),
+			@ApiResponse(responseCode = "404", description = "존재하지 않는 사용자일 때",
+					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = ProblemDetail.class),
+							examples = @ExampleObject(value =
+									"""
+									{
+										"type": "about:blank",
+										"title": "USER Not Found",
+										"status": 404,
+										"detail": "USER: {1} Not Found",
+										"instance": "/api/v1/users/me",
+										"timestamp": "2025-08-16T05:06:40.722932200Z"
+									}
+									"""
+							)
+					)
+			),
+	})
+	ResponseEntity<UserPasswordUpdateResDto> updatePassword(
+			@RequestBody @Valid UserPasswordUpdateReqDto request,
 			@Parameter(hidden = true) @AuthenticationPrincipal CustomUserPrincipal userPrincipal
 	);
 
@@ -192,9 +179,9 @@ public interface UserApi {
 									"""
 									{
 										"type": "about:blank",
-										"title": "User Not Found",
+										"title": "USER Not Found",
 										"status": 404,
-										"detail": "User: {1} Not Found",
+										"detail": "USER: {1} Not Found",
 										"instance": "/api/v1/users/1/status",
 										"timestamp": "2025-08-16T05:09:12.094312100Z"
 									}

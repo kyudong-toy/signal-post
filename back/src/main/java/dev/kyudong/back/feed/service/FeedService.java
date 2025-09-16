@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,8 +29,9 @@ public class FeedService {
 		RList<String> feedCache = redissonClient.getList(feedKey);
 		if (!feedCache.isExists()) {
 			feedGenerator.generateAndCacheFeedForUser(userId, feedKey);
-			List<PostFeedDto> previewPosts = postFeedQueryPort.findPopularPostsWithUser(userId, Instant.now(), 20);
-			return FeedListResDto.of(true, 1, previewPosts);
+			List<PostFeedDto> previewPosts = postFeedQueryPort.findPreviewPosts(userId, 21);
+			boolean hasNext = previewPosts.size() == 20;
+			return FeedListResDto.of(hasNext, 1, previewPosts);
 		}
 
 		return createFeedDetailRes(page, feedCache);
@@ -47,8 +47,9 @@ public class FeedService {
 		RList<String> feedCache = redissonClient.getList(feedKey);
 		if (!feedCache.isExists()) {
 			feedGenerator.generateAndCacheFeedForGuest(guestId, feedKey);
-			List<PostFeedDto> previewPosts = postFeedQueryPort.findPopularPostsWithGuest(Instant.now(), 20);
-			return FeedListResDto.of(true, 1, previewPosts);
+			List<PostFeedDto> previewPosts = postFeedQueryPort.findPreviewPosts(21);
+			boolean hasNext = previewPosts.size() == 20;
+			return FeedListResDto.of(hasNext, 1, previewPosts);
 		}
 
 		return createFeedDetailRes(page, feedCache);

@@ -9,21 +9,18 @@ import dev.kyudong.back.chat.domain.RoomStatus;
 import dev.kyudong.back.chat.event.ChatEventHandler;
 import dev.kyudong.back.chat.repository.ChatRoomRepository;
 import dev.kyudong.back.chat.service.ChatRoomService;
+import dev.kyudong.back.testhelper.base.UnitTestBase;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.exception.UsersNotFoundException;
-import dev.kyudong.back.user.repository.UserRepository;
+import dev.kyudong.back.user.service.UserReaderService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,16 +28,11 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doNothing;
 
-@ExtendWith(MockitoExtension.class)
-public class ChatRoomServiceTests {
-
-	@Mock
-	private UserRepository userRepository;
+public class ChatRoomServiceTests extends UnitTestBase {
 
 	@Mock
 	private ChatRoomRepository chatRoomRepository;
@@ -51,50 +43,33 @@ public class ChatRoomServiceTests {
 	@InjectMocks
 	private ChatRoomService chatRoomService;
 
-	private static User makeMockUser(String username, Long id) {
-		User mockUser = User.builder()
-				.username(username)
-				.rawPassword("passWord")
-				.encodedPassword("passWord")
-				.build();
-		ReflectionTestUtils.setField(mockUser, "id", id);
-		return mockUser;
-	}
-
-	private static ChatRoom makeMockChatRoom(List<User> userList) {
-		ChatRoom mockChatRoom = ChatRoom.builder()
-				.initUserList(userList)
-				.build();
-		ReflectionTestUtils.setField(mockChatRoom, "id", 1L);
-		ReflectionTestUtils.setField(mockChatRoom, "createdAt", Instant.now());
-		return mockChatRoom;
-	}
+	@Mock
+	private UserReaderService userReaderService;
 
 	@Test
 	@DisplayName("채팅방 조회 - 성공")
 	void findChatrooms_succes() {
 		// given
 		Long userId = 1L;
-		User mockUser = makeMockUser("dkxxz", userId);
-		given(userRepository.getReferenceById(anyLong())).willReturn(mockUser);
+		User mockUser = createMockUser("dkxxz", userId);
+		given(userReaderService.getUserReference(userId)).willReturn(mockUser);
 
-		ChatRoom chatRoom1 = makeMockChatRoom(
+		ChatRoom chatRoom1 = createMockChatRoom(
 				List.of(
-						makeMockUser("zdsfzd", 9L)
+						createMockUser("zdsfzd", 9L)
 				)
 		);
-		ChatRoom chatRoom2 = makeMockChatRoom(
+		ChatRoom chatRoom2 = createMockChatRoom(
 				List.of(
-						makeMockUser("zzzz1dfbbv", 83L),
-						makeMockUser("z1fdvfv", 1283L),
-						makeMockUser("zzzz", 1111L)
+						createMockUser("zzzz1dfbbv", 83L),
+						createMockUser("z1fdvfv", 1283L),
+						createMockUser("zzzz", 1111L)
 				)
 		);
 
 		PageRequest pageRequest = PageRequest.of(0, 10);
 		Slice<ChatRoom> chatrooms = new SliceImpl<>(List.of(chatRoom1, chatRoom2), pageRequest, false);
-		given(chatRoomRepository.findChatRooomsByMember(mockUser, pageRequest))
-				.willReturn(chatrooms);
+		given(chatRoomRepository.findChatRooomsByMember(mockUser, pageRequest)).willReturn(chatrooms);
 
 		// when
 		ChatRoomResDto response = chatRoomService.findChatRooms(userId, null, null);
@@ -102,7 +77,7 @@ public class ChatRoomServiceTests {
 		// then
 		assertThat(response).isNotNull();
 		assertThat(response.hasNext()).isFalse();
-		then(userRepository).should().getReferenceById(anyLong());
+		then(userReaderService).should().getUserReference(userId);
 		then(chatRoomRepository).should().findChatRooomsByMember(any(User.class), any(PageRequest.class));
 	}
 
@@ -110,15 +85,15 @@ public class ChatRoomServiceTests {
 	@DisplayName("채팅룸 생성 - 성공")
 	void createChatRoom_success() {
 		// given
-		User mockUser1 = makeMockUser("cnzn1d", 1L);
-		User mockUser2 = makeMockUser("zzsda", 2L);
+		User mockUser1 = createMockUser("cnzn1d", 1L);
+		User mockUser2 = createMockUser("zzsda", 2L);
 
 		ChatRoomCreateReqDto request = new ChatRoomCreateReqDto("hello", Set.of(1L, 2L));
 
 		List<User> userList = List.of(mockUser1, mockUser2);
-		given(userRepository.findByIdIn(request.userIds())).willReturn(userList);
+		given(userReaderService.getUsersByIds(request.userIds())).willReturn(userList);
 
-		ChatRoom chatRoom = makeMockChatRoom(userList);
+		ChatRoom chatRoom = createMockChatRoom(userList);
 		given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(chatRoom);
 
 		doNothing().when(chatEventHandler).handleRoomCreate(any(ChatRoomCreateEvent.class));
@@ -129,7 +104,7 @@ public class ChatRoomServiceTests {
 		// then
 		assertThat(response.memberCount()).isEqualTo(2);
 		assertThat(response.status()).isEqualTo(RoomStatus.ACTIVE);
-		then(userRepository).should().findByIdIn(request.userIds());
+		then(userReaderService).should().getUsersByIds(request.userIds());
 		then(chatRoomRepository).should().save(any(ChatRoom.class));
 	}
 
@@ -137,11 +112,11 @@ public class ChatRoomServiceTests {
 	@DisplayName("채팅룸 생성 - 실패 : 채팅방 사용자들 조회가 안됨")
 	void createChatRoom_fail_usersNotFound() {
 		// given
-		User mockUser = makeMockUser("cnzn1d", 1L);
+		User mockUser = createMockUser("cnzn1d", 1L);
 
 		ChatRoomCreateReqDto request = new ChatRoomCreateReqDto("hello", Set.of(1L, 2L));
 
-		given(userRepository.findByIdIn(Set.of(1L, 2L))).willReturn(new ArrayList<>());
+		given(userReaderService.getUsersByIds(Set.of(1L, 2L))).willReturn(new ArrayList<>());
 
 		// when & then
 		assertThatThrownBy(() -> chatRoomService.createChatRoom(mockUser.getId(), request))

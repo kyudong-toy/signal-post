@@ -48,14 +48,17 @@ public class Comment {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
-	private CommentStatus status = CommentStatus.NORMAL;
+	private CommentStatus status;
 
-	@Builder
 	private Comment(String content, @NonNull User user) {
 		validContent(content);
 		this.content = content;
 		this.user = user;
 		this.status = CommentStatus.NORMAL;
+	}
+
+	public static Comment create(String content, User user) {
+		return new Comment(content, user);
 	}
 
 	public void updateContent(String content) {

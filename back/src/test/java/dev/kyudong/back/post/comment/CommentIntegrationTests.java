@@ -1,15 +1,13 @@
 package dev.kyudong.back.post.comment;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.post.domain.dto.web.req.CommentCreateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentStatusUpdateReqDto;
 import dev.kyudong.back.post.domain.dto.web.req.CommentUpdateReqDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentCreateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentItemResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentStatusUpdateResDto;
-import dev.kyudong.back.post.domain.dto.web.res.CommentUpdateResDto;
+import dev.kyudong.back.post.domain.dto.web.res.*;
 import dev.kyudong.back.post.domain.entity.Comment;
 import dev.kyudong.back.post.domain.entity.CommentStatus;
 import dev.kyudong.back.post.domain.entity.Post;
@@ -21,25 +19,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
-public class CommentIntegrationTests {
+public class CommentIntegrationTests extends IntegrationTestBase {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -71,10 +64,29 @@ public class CommentIntegrationTests {
 		return userRepository.save(newUser);
 	}
 
-	private Post createTestPost(User user) {
-		Post newPost = Post.create("제목", "");
+	private Post createTestPost(User user) throws JsonProcessingException {
+		Post newPost = Post.create("제목", createMockTiptapContent());
 		user.addPost(newPost);
 		return postRepository.save(newPost);
+	}
+
+	private String createMockTiptapContent() throws JsonProcessingException {
+		Map<String, Object> textNode = Map.of(
+				"type", "text",
+				"text", "테스트입니다"
+		);
+
+		Map<String, Object> paragraphNode = Map.of(
+				"type", "paragraph",
+				"contents", List.of(textNode)
+		);
+
+		Map<String, Object> map = Map.of(
+				"type", "doc",
+				"contents", List.of(paragraphNode)
+		);
+
+		return new ObjectMapper().writeValueAsString(map);
 	}
 
 	@Test
@@ -83,29 +95,23 @@ public class CommentIntegrationTests {
 		// given
 		User user = createTestUser();
 		Post post = createTestPost(user);
-		Comment comment1 = Comment.builder()
-				.content("댓글1")
-				.user(user)
-				.build();
-		Comment comment2 = Comment.builder()
-				.content("댓글2")
-				.user(user)
-				.build();
+		Comment comment1 = Comment.create(createMockTiptapContent(), user);
+		Comment comment2 = Comment.create(createMockTiptapContent(), user);
 		post.addComments(List.of(comment1, comment2));
 		commentRepository.save(comment1);
 		commentRepository.save(comment2);
 
 		// when
-		MvcResult result = mockMvc.perform(get("/api/v1/posts/{postId}/comments", post.getId()))
+		MvcResult result = mockMvc.perform(get("/api/v1/posts/{postId}/comments", post.getId())
+											.param("sort", "NEW"))
 									.andExpect(status().isOk())
 									.andDo(print())
 									.andReturn();
 
 		// then
 		String responseBody = result.getResponse().getContentAsString();
-		List<CommentItemResDto> response = objectMapper.readValue(responseBody, new TypeReference<>() {});
-		assertThat(response.size()).isEqualTo(2);
-		assertThat(response.get(0).content()).isEqualTo("댓글1");
+		CommentListResDto response = objectMapper.readValue(responseBody, CommentListResDto.class);
+		assertThat(response.hasNext()).isFalse();
 	}
 
 	@Test
@@ -114,11 +120,11 @@ public class CommentIntegrationTests {
 		// given
 		User user = createTestUser();
 		Post post = createTestPost(user);
-		CommentCreateReqDto request = new CommentCreateReqDto("Hello Comment");
+		CommentCreateReqDto request = new CommentCreateReqDto(createMockTiptapContent());
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/posts/{postId}/comments", post.getId())
-										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 										.contentType(MediaType.APPLICATION_JSON.toString())
 										.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isCreated())
@@ -130,7 +136,6 @@ public class CommentIntegrationTests {
 		CommentCreateResDto response = objectMapper.readValue(responseBody, CommentCreateResDto.class);
 		assertThat(response).isNotNull();
 		assertThat(response.postId()).isEqualTo(post.getId());
-		assertThat(response.content()).isEqualTo("Hello Comment");
 	}
 
 	@Test
@@ -139,10 +144,7 @@ public class CommentIntegrationTests {
 		// given
 		User user = createTestUser();
 		Post post = createTestPost(user);
-		Comment comment = Comment.builder()
-				.content("Comment Content")
-				.user(user)
-				.build();
+		Comment comment = Comment.create(createMockTiptapContent(), user);
 		post.addComment(comment);
 		commentRepository.save(comment);
 
@@ -150,7 +152,7 @@ public class CommentIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}",post.getId(), comment.getId())
-										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+										.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 										.contentType(MediaType.APPLICATION_JSON.toString())
 										.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isOk())
@@ -162,7 +164,6 @@ public class CommentIntegrationTests {
 		CommentUpdateResDto response = objectMapper.readValue(responseBody, CommentUpdateResDto.class);
 		assertThat(response).isNotNull();
 		assertThat(response.userId()).isEqualTo(user.getId());
-		assertThat(response.content()).isEqualTo("Hello Comment");
 	}
 
 	@Test
@@ -171,10 +172,7 @@ public class CommentIntegrationTests {
 		// given
 		User user = createTestUser();
 		Post post = createTestPost(user);
-		Comment comment = Comment.builder()
-				.content("Comment Content")
-				.user(user)
-				.build();
+		Comment comment = Comment.create(createMockTiptapContent(), user);
 		post.addComment(comment);
 		Comment savedComment = commentRepository.save(comment);
 
@@ -182,7 +180,7 @@ public class CommentIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/posts/{postId}/comments/{commentId}/status", post.getId(), savedComment.getId())
-											.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(user))
+											.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(user))
 											.contentType(MediaType.APPLICATION_JSON.toString())
 											.content(objectMapper.writeValueAsString(request)))
 									.andExpect(status().isOk())

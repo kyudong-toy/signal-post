@@ -16,7 +16,9 @@ public class PostScheduler {
 	@Scheduled(cron = "0 0 */3 * * *")
 	public void refreshRandomOldPost() {
 		log.info("오래된 게시글 목록을 랜덤으로 생성합니다");
+
 		postUsecase.refreshRandomOldPost();
+
 		log.info("오래된 게시글 목록을 랜덤으로 생성이 완료되었습니다");
 	}
 

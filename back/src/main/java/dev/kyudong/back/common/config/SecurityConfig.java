@@ -40,11 +40,23 @@ public class SecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.sessionManagement(seession -> seession.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth ->
-					auth.requestMatchers("/ws/**").permitAll() // Interceptor가 처리
+					auth.requestMatchers("/ws/**").permitAll() // StompChannelInterceptor가 처리
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/v1/posts/**", "/api/v1/feeds").permitAll()
-						.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/v1/users", "/api/v1/users/login").permitAll()
+						.requestMatchers(HttpMethod.GET,
+								"/api/v1/posts/**",
+								"/api/v1/feeds",
+								"/api/v1/users/**",
+
+								"/swagger-ui/**",
+								"/swagger-ui.html",
+								"/v3/api-docs/**"
+						).permitAll()
+						.requestMatchers(HttpMethod.POST,
+								"/api/v1/users",
+								"/api/v1/users/login",
+								"/api/v1/auth/login",
+								"/api/v1/auth/reissue"
+						).permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -59,6 +71,7 @@ public class SecurityConfig {
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setExposedHeaders(List.of("Authorization", "Location"));
 		configuration.setAllowCredentials(true);
+
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;

@@ -1,6 +1,7 @@
 package dev.kyudong.back.follow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.follow.api.res.FollowCreateResDto;
 import dev.kyudong.back.follow.domain.Follow;
@@ -11,22 +12,16 @@ import dev.kyudong.back.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
-public class FollowIntegrationTests {
+public class FollowIntegrationTests extends IntegrationTestBase {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -61,7 +56,7 @@ public class FollowIntegrationTests {
 
 		// when
 		MvcResult result = mockMvc.perform(post("/api/v1/users/{username}/follow", mockFollowing.getUsername())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(mockFollower)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(mockFollower)))
 				.andExpect(status().isCreated())
 				.andDo(print())
 				.andReturn();
@@ -82,15 +77,12 @@ public class FollowIntegrationTests {
 		User mockFollower = makeMockUser("zxzcz12");
 		User mockFollowing = makeMockUser("ckznds");
 
-		Follow follow = Follow.builder()
-				.follower(mockFollower)
-				.following(mockFollowing)
-				.build();
+		Follow follow = Follow.create(mockFollower, mockFollowing);
 		followRepository.save(follow);
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/users/{username}/accept", mockFollowing.getUsername())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(mockFollower)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(mockFollower)))
 				.andExpect(status().isOk())
 				.andDo(print())
 				.andReturn();
@@ -111,16 +103,13 @@ public class FollowIntegrationTests {
 		User mockFollower = makeMockUser("zxzcz12");
 		User mockFollowing = makeMockUser("ckznds");
 
-		Follow follow = Follow.builder()
-				.follower(mockFollower)
-				.following(mockFollowing)
-				.build();
+		Follow follow = Follow.create(mockFollower, mockFollowing);
 		follow.accept();
 		followRepository.save(follow);
 
 		// when
 		MvcResult result = mockMvc.perform(patch("/api/v1/users/{username}/block", mockFollowing.getUsername())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(mockFollower)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(mockFollower)))
 				.andExpect(status().isOk())
 				.andDo(print())
 				.andReturn();
@@ -141,16 +130,13 @@ public class FollowIntegrationTests {
 		User mockFollower = makeMockUser("zxzcz12");
 		User mockFollowing = makeMockUser("ckznds");
 
-		Follow follow = Follow.builder()
-				.follower(mockFollower)
-				.following(mockFollowing)
-				.build();
+		Follow follow = Follow.create(mockFollower, mockFollowing);
 		follow.accept();
 		followRepository.save(follow);
 
 		// when
 		MvcResult result = mockMvc.perform(delete("/api/v1/users/{username}/follow", mockFollowing.getUsername())
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateToken(mockFollower)))
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.createAccessToken(mockFollower)))
 				.andExpect(status().isOk())
 				.andDo(print())
 				.andReturn();
