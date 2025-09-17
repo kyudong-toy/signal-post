@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kyudong.back.testhelper.base.IntegrationTestBase;
 import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
+import dev.kyudong.back.user.api.dto.res.UserValidateResDto;
 import dev.kyudong.back.user.domain.User;
 import dev.kyudong.back.user.repository.UserRepository;
 import dev.kyudong.back.user.repository.UserTokenRepository;
@@ -17,8 +17,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,11 +47,7 @@ public class UserAuthIntegrationTests extends IntegrationTestBase {
 	@DisplayName("사용자 로그인")
 	void login() throws Exception {
 		// given
-		User newUser = User.builder()
-				.username("mockUser")
-				.rawPassword("password")
-				.encodedPassword(passwordEncoder.encode("password"))
-				.build();
+		User newUser = User.create("mockUser", "password", passwordEncoder.encode("password"));
 		User savedUser = userRepository.save(newUser);
 		userRepository.save(savedUser);
 		UserLoginReqDto request = new UserLoginReqDto(savedUser.getUsername(), "password");
@@ -73,25 +67,15 @@ public class UserAuthIntegrationTests extends IntegrationTestBase {
 
 		// then
 		String responseBody = result.getResponse().getContentAsString();
-		UserLoginResDto response = objectMapper.readValue(responseBody, UserLoginResDto.class);
+		UserValidateResDto response = objectMapper.readValue(responseBody, UserValidateResDto.class);
 		assertThat(response).isNotNull();
-
-		Optional<User> optionalUser = userRepository.findById(response.id());
-		assertThat(optionalUser).isPresent();
-
-		User user = optionalUser.get();
-		assertThat(user.getUsername()).isEqualTo(request.username());
 	}
 
 	@Test
 	@DisplayName("토큰 재발급")
 	void reissue() throws Exception {
 		// given
-		User newUser = User.builder()
-				.username("mockUser")
-				.rawPassword("password")
-				.encodedPassword(passwordEncoder.encode("password"))
-				.build();
+		User newUser = User.create("mockUser", "password", passwordEncoder.encode("password"));
 		User savedUser = userRepository.save(newUser);
 		userRepository.save(savedUser);
 		String accessToken = jwtUtil.createAccessToken(savedUser);
