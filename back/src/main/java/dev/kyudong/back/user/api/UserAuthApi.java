@@ -1,7 +1,7 @@
 package dev.kyudong.back.user.api;
 
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
+import dev.kyudong.back.user.api.dto.res.UserValidateResDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -35,7 +35,7 @@ public interface UserAuthApi {
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "로그인 성공",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-							schema = @Schema(implementation = UserLoginResDto.class),
+							schema = @Schema(implementation = UserValidateResDto.class),
 							examples = @ExampleObject(value =
 									"""
 									{
@@ -82,6 +82,6 @@ public interface UserAuthApi {
 					)
 			),
 	})
-	ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request);
+	ResponseEntity<UserValidateResDto> loginUser(@RequestBody @Valid UserLoginReqDto request);
 
 }

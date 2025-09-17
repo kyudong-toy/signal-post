@@ -8,9 +8,7 @@ import dev.kyudong.back.user.api.UserAuthController;
 import dev.kyudong.back.user.api.dto.UserLoginDto;
 import dev.kyudong.back.user.api.dto.UserReissueDto;
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
-import dev.kyudong.back.user.api.dto.res.UserReissueResDto;
-import dev.kyudong.back.user.domain.User;
+import dev.kyudong.back.user.api.dto.res.UserValidateResDto;
 import dev.kyudong.back.user.exception.InvalidTokenException;
 import dev.kyudong.back.user.properties.UserTokenProperties;
 import dev.kyudong.back.user.service.UserAuthService;
@@ -63,17 +61,8 @@ public class UserAuthControllerTests {
 	@DisplayName("사용자 로그인 - 성공")
 	void loginApi_success() throws Exception {
 		// given
-		User mockUser = User.builder()
-				.username("username")
-				.rawPassword("password")
-				.encodedPassword("encode")
-				.build();
-
 		UserLoginReqDto request = new UserLoginReqDto("username", "password");
-		UserLoginDto response = new UserLoginDto(
-				UserLoginResDto.from(mockUser, "access"),
-				"refresh"
-		);
+		UserLoginDto response = new UserLoginDto(UserValidateResDto.from("access"), "refresh");
 		given(userAuthService.login(any(UserLoginReqDto.class))).willReturn(response);
 
 		// when & given
@@ -107,10 +96,7 @@ public class UserAuthControllerTests {
 		String accessToken = "access";
 		String refreshValue = "refresh";
 
-		UserReissueDto reissueDto = new UserReissueDto(
-				UserReissueResDto.from("new-access"),
-				"new-refresh"
-		);
+		UserReissueDto reissueDto = new UserReissueDto(UserValidateResDto.from("new-access"), "new-refresh");
 		given(userAuthService.reissue(anyString(), anyString())).willReturn(reissueDto);
 
 		// when & given

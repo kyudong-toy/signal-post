@@ -4,8 +4,7 @@ import com.google.common.net.HttpHeaders;
 import dev.kyudong.back.user.api.dto.UserLoginDto;
 import dev.kyudong.back.user.api.dto.UserReissueDto;
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
-import dev.kyudong.back.user.api.dto.res.UserReissueResDto;
+import dev.kyudong.back.user.api.dto.res.UserValidateResDto;
 import dev.kyudong.back.user.properties.UserTokenProperties;
 import dev.kyudong.back.user.security.CustomUserPrincipal;
 import dev.kyudong.back.user.service.UserAuthService;
@@ -26,7 +25,7 @@ public class UserAuthController implements UserAuthApi {
 
 	@Override
 	@PostMapping("/login")
-	public ResponseEntity<UserLoginResDto> loginUser(@RequestBody @Valid UserLoginReqDto request) {
+	public ResponseEntity<UserValidateResDto> loginUser(@RequestBody @Valid UserLoginReqDto request) {
 		UserLoginDto loginDto = userAuthService.login(request);
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, createRefreshCookie(loginDto.refreshToken()))
@@ -42,7 +41,7 @@ public class UserAuthController implements UserAuthApi {
 	}
 
 	@PostMapping("/reissue")
-	public ResponseEntity<UserReissueResDto> reissue(
+	public ResponseEntity<UserValidateResDto> reissue(
 			@RequestHeader("Authorization") String accessToken,
 			@CookieValue("refresh") String refreshToken
 	) {

@@ -72,7 +72,6 @@ public class UserAuthServiceTests extends UnitTestBase {
 
 			// then
 			assertThat(loginDto).isNotNull();
-			assertThat(loginDto.response().username()).isEqualTo(username);
 			assertThat(loginDto.response().token()).isNotNull();
 			assertThat(loginDto.refreshToken()).isNotNull();
 

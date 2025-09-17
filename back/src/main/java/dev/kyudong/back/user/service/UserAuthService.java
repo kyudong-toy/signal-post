@@ -5,9 +5,9 @@ import dev.kyudong.back.common.jwt.JwtUtil;
 import dev.kyudong.back.user.api.dto.UserLoginDto;
 import dev.kyudong.back.user.api.dto.UserReissueDto;
 import dev.kyudong.back.user.api.dto.req.UserLoginReqDto;
-import dev.kyudong.back.user.api.dto.res.UserLoginResDto;
-import dev.kyudong.back.user.api.dto.res.UserReissueResDto;
+import dev.kyudong.back.user.api.dto.res.UserValidateResDto;
 import dev.kyudong.back.user.domain.User;
+import dev.kyudong.back.user.domain.UserStatus;
 import dev.kyudong.back.user.exception.InvalidTokenException;
 import dev.kyudong.back.user.exception.UserNotFoundException;
 import dev.kyudong.back.user.repository.UserRepository;
@@ -16,6 +16,7 @@ import dev.kyudong.back.user.security.CustomUserPrincipal;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,12 +41,17 @@ public class UserAuthService {
 					return new UserNotFoundException(request.username());
 				});
 
+		if (user.getStatus() != UserStatus.ACTIVE) {
+			log.warn("해당 계정은 사용이 불가능합니다: username={}", request.username());
+			throw new AccessDeniedException("해당 계정은 사용이 불가능합니다");
+		}
+
 		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
 			log.warn("사용자 로그인 요청 실패 - 비밀번호가 일치하지 않습니다 : username: {}", request.username());
 			throw new InvalidInputException("Password not Equals");
 		}
 
-		UserLoginResDto response = UserLoginResDto.from(user, jwtUtil.createAccessToken(user));
+		UserValidateResDto response = UserValidateResDto.from(jwtUtil.createAccessToken(user));
 		String refreshToken = jwtUtil.createRefreshToken(user);
 		userTokenRepository.saveToken(request.username(), refreshToken);
 
@@ -89,7 +95,7 @@ public class UserAuthService {
 		String newRefreshToken = jwtUtil.createRefreshToken(user);
 
 		userTokenRepository.saveToken(username, newRefreshToken);
-		UserReissueResDto reissueDto = UserReissueResDto.from(newAccessToken);
+		UserValidateResDto reissueDto = UserValidateResDto.from(newAccessToken);
 
 		log.debug("토큰이 다시 발급되었습니다: username={}", username);
 		return UserReissueDto.from(reissueDto, newRefreshToken);
