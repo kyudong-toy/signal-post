@@ -2,13 +2,13 @@ import StarterKit from '@tiptap/starter-kit'
 import DOMPurify from "dompurify";
 import parse from "html-react-parser";
 import { generateHTML } from "@tiptap/html";
-import {toast} from "sonner";
+import { toast } from "sonner";
 
 interface ViewerProps {
   content: string;
 }
 
-export const Viewer = ({ content }: ViewerProps) => {
+const DetailViewer = ({ content }: ViewerProps) => {
   if (content === undefined) {
     return;
   }
@@ -24,7 +24,9 @@ export const Viewer = ({ content }: ViewerProps) => {
       </div>
     );
   } catch (error) {
-    toast.warning('게시글 로드에 실패했습니다');
+    toast.warning('콘텐츠 로드에 실패했습니다');
     console.error(error);
   }
 }
+
+export default DetailViewer
