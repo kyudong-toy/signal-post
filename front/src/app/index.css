@@ -1,3 +1,5 @@
+@import 'prosemirror-view/style/prosemirror.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,4 +87,17 @@
 
 .ProseMirror {
   outline: none;
+}
+
+/* ... */
+.tiptap img.is-uploading {
+  opacity: 0.5;
+  position: relative;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
 }
