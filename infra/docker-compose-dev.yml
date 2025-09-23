@@ -11,6 +11,7 @@ services:
       - ./nginx/nginx-dev.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
       - ./nginx/certs:/etc/nginx/certs:ro
+      - D:/toy/uploads:/var/www/uploads:ro
     networks:
       - signal-network
   postgres:
@@ -36,8 +37,17 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - signal-network
+  ffmpeg:
+    image: jrottenberg/ffmpeg:4.4-ubuntu
+    container_name: signal-ffmpeg
+    volumes:
+      - D:/toy/uploads:/storage:rw
+    entrypoint: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
+    networks:
+      - signal-network
 networks:
   signal-network:
     driver: bridge
 volumes:
   pgdata_temp:
+  uploads-data:
