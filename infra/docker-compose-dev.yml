@@ -1,5 +1,4 @@
 # 프론트, 백엔드 개발시 사용해주세요
-version: '3.9'
 services:
   nginx:
     image: nginx:latest
@@ -24,7 +23,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata_temp:/var/lib/postgresql/data
+      - postgre_data:/var/lib/postgresql/data
     networks:
       - signal-network
   redis:
@@ -45,9 +44,22 @@ services:
     entrypoint: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
     networks:
       - signal-network
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: signal-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbit
+      - RABBITMQ_DEFAULT_PASS=mqmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - signal-network
 networks:
   signal-network:
     driver: bridge
 volumes:
-  pgdata_temp:
-  uploads-data:
+  postgre_data:
+  rabbitmq_data:
