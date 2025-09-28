@@ -5,6 +5,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    properties:
+      format_sql: true
+      show_sql: true
 
 # ===================================================================
 # log Configuration
@@ -32,9 +35,17 @@ jwt:
 # ===================================================================
 # file Configuration
 # ===================================================================
-file:
-  upload-dir: /test/uploads
-  public-web-path: /media/
+media:
+  base-path: /storage
+  web-path: /media/
+  host-path: D:\toy\uploads
+  sub-paths:
+    temp-dir: temp
+    origin-dir: orgin
+    process-dir: process
+    user-dir: user
+    post-dir: post
+    chat-dir: chat
 
 # ===================================================================
 # datasource-proxy Configuration
@@ -43,14 +54,23 @@ decorator:
   datasource:
     enabled: true
     datasource-proxy:
-      json-format: true
       logging: slf4j
-      multiline: true
+      multiline: false
+      format-sql: false
+      json-format: true
       query:
-        enable-logging: true
+        enable-logging: false
       slow-query:
         enable-logging: true
-        log-level: INFO
+        log-level: WARN
+    flexy-pool:
+      acquisition-strategy:
+        increment-pool:
+          timeout-millis: 500
+      threshold:
+        connection:
+          acquisition: 100
+          lease: 1000
 
 # ===================================================================
 # stomp Configuration

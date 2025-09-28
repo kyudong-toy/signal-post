@@ -8,6 +8,11 @@ server:
 # Spring Boot Core Configuration
 # ===================================================================
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      location: ${file.sub-paths.temp-dir}
   datasource:
     url: jdbc:postgresql://localhost:5433/signalpost
     username: postgres
@@ -29,6 +34,8 @@ spring:
           batch_size: 20
           order_updates: true
           order_inserts: true
+        format_sql: true
+        show_sql: true
     open-in-view: false
   task:
     scheduling:
@@ -41,6 +48,12 @@ spring:
       repositories:
         enabled: false
       password: helloredis
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: rabbit
+    password: mqmq
+    virtual-host: /
 
 # ===================================================================
 # Springdoc (Swagger UI) Configuration
@@ -53,7 +66,6 @@ springdoc:
     tags-sorter: alpha # 태그(Controller) 정렬 순서: 알파벳순
     operations-sorter: method # API(Operation) 정렬 순서: 알파벳순
     display-request-duration: true # 요청시간 표시
-  # 기본 요청/응답 미디어 타입 설정
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
@@ -69,8 +81,7 @@ logging:
     dev.kyudong.back: DEBUG
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
-    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: DEBUG
-    net.ttddyy.dsproxy.listener.logging.SLF4JSlowQueryListener: WARN
+    p6b.spy: TRACE
 
 # ===================================================================
 # jwt Configuration
@@ -83,27 +94,30 @@ jwt:
   refresh-expiration-time: 604800000
 
 # ===================================================================
-# file Configuration
+# media Configuration
 # ===================================================================
-file:
-  upload-dir: D:/toy/uploads # 서버 상황에 맞춰 설정
-  public-web-path: /media/
+media:
+  base-path: /storage
+  web-path: /media/
+  host-path: D:\toy\uploads
+  sub-paths:
+    temp-dir: temp
+    origin-dir: orgin
+    process-dir: process
+    user-dir: user
+    post-dir: post
+    chat-dir: chat
 
 # ===================================================================
-# datasource-proxy Configuration
+# console log Configuration
 # ===================================================================
 decorator:
   datasource:
     enabled: true
-    datasource-proxy:
-      json-format: true
-      logging: slf4j
+    p6spy:
+      enable-logging: true
       multiline: true
-      query:
-        enable-logging: true
-      slow-query:
-        enable-logging: true
-        log-level: ERROR
+      logging: slf4j
 
 # ===================================================================
 # stomp Configuration
