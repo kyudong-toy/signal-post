@@ -12,7 +12,6 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-      location: ${file.sub-paths.temp-dir}
   datasource:
     url: jdbc:postgresql://localhost:5433/signalpost
     username: postgres
@@ -116,8 +115,6 @@ decorator:
     enabled: true
     p6spy:
       enable-logging: true
-      multiline: true
-      logging: slf4j
 
 # ===================================================================
 # stomp Configuration

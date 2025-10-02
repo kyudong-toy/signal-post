@@ -16,12 +16,9 @@ logging:
   level:
     root: INFO
     org.springframework: INFO
-    org.hibernate: INFO
     dev.kyudong.back: DEBUG
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
-    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: DEBUG
-    net.ttddyy.dsproxy.listener.logging.SLF4JSlowQueryListener: WARN
 
 # ===================================================================
 # jwt Configuration
@@ -53,24 +50,8 @@ media:
 decorator:
   datasource:
     enabled: true
-    datasource-proxy:
-      logging: slf4j
-      multiline: false
-      format-sql: false
-      json-format: true
-      query:
-        enable-logging: false
-      slow-query:
-        enable-logging: true
-        log-level: WARN
-    flexy-pool:
-      acquisition-strategy:
-        increment-pool:
-          timeout-millis: 500
-      threshold:
-        connection:
-          acquisition: 100
-          lease: 1000
+    p6spy:
+      enable-logging: true
 
 # ===================================================================
 # stomp Configuration
