@@ -9,7 +9,6 @@ import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.Key;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,15 +38,16 @@ public class JwtUtil {
 	}
 
 	public String createAccessToken(User user) {
+		log.debug("액세스 토큰 생성을 시작합니다: userId={}, username={}", user.getId(), user.getUsername());
 		return generateToken(user, accessKey, accessTokenExpirationTime);
 	}
 
 	public String createRefreshToken(User user) {
+		log.debug("리프레쉬 토큰 생성을 시작합니다: userId={}, username={}", user.getId(), user.getUsername());
 		return generateToken(user, refreshKey, refreshTokenExpirationTime);
 	}
 
 	private String generateToken(User user, Key key, long expirationTime) {
-		log.debug("토큰 생성을 시작합니다: userId={}, username={}", user.getId(), user.getUsername());
 		Map<String, Object> header = new HashMap<>();
 		header.put(JwsHeader.TYPE, JwsHeader.JWT_TYPE);
 		header.put(JwsHeader.ALGORITHM, SignatureAlgorithm.HS256);
@@ -59,16 +59,14 @@ public class JwtUtil {
 
 		Date now = new Date();
 		Date expiredTime = new Date(now.getTime() + expirationTime);
-		String token = Jwts.builder()
+
+		return Jwts.builder()
 				.setHeader(header)
 				.setClaims(claims)
 				.setIssuedAt(now)
 				.setExpiration(expiredTime)
 				.signWith(key, SignatureAlgorithm.HS256)
 				.compact();
-
-		log.debug("토큰을 생성했습니다: userId={}, username={}, time={}", user.getId(), user.getUsername(), LocalDateTime.now());
-		return token;
 	}
 
 	public Claims getClaimsFromAccessToken(String token) {
@@ -80,6 +78,20 @@ public class JwtUtil {
 					.getBody();
 		} catch (ExpiredJwtException ex) {
 			throw new UserTokenExpiredExcpetion();
+		} catch (SignatureException s) {
+			throw new RuntimeException();
+		}
+	}
+
+	public String getSubjectFromAccessTokenForReissue(String token) {
+		try {
+			return Jwts.parserBuilder()
+					.setSigningKey(accessKey)
+					.build()
+					.parseClaimsJws(token)
+					.getBody().getSubject();
+		} catch (ExpiredJwtException ex) {
+			return ex.getClaims().getSubject();
 		} catch (SignatureException s) {
 			throw new RuntimeException();
 		}

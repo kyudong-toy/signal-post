@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String token = resolveToken(request);
 
-		if (token != null) {
+		if (token != null && !request.getRequestURI().contains("/auth/reissue")) {
 			try {
 				Claims claims = jwtUtil.getClaimsFromAccessToken(token);
 				CustomUserPrincipal userPrincipal = CustomUserPrincipal.createPrincipalFromClaims(claims);
@@ -46,11 +46,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			} catch (UserTokenExpiredExcpetion u) {
 				log.debug("토큰 인증시간이 만료되었습니다");
 				handlerExceptionResolver.resolveException(request, response, null, u);
-				return;
 			} catch (Exception e) {
 				log.error("토큰 검증 중 에러가 발생했습니다", e);
 				handlerExceptionResolver.resolveException(request, response, null, e);
-				return;
 			}
 		}
 

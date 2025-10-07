@@ -67,12 +67,13 @@ public class UserAuthService {
 
 	@Transactional
 	public UserReissueDto reissue(@NonNull final String accessToken, @NonNull final String refreshToken) {
-		if (!jwtUtil.validateRefreshToken(refreshToken)) {
+		if (!jwtUtil.validateRefreshToken(refreshToken) || !accessToken.startsWith("Bearer")) {
 			log.warn("유효하지 않는 토큰입니다");
 			throw new InvalidTokenException();
 		}
 
-		String username = jwtUtil.getClaimsFromAccessToken(accessToken).getSubject();
+		String tokenValue = accessToken.substring(7);
+		String username = jwtUtil.getSubjectFromAccessTokenForReissue(tokenValue);
 		String storedRefreshToken = userTokenRepository.findTokenByUsername(username);
 		if (storedRefreshToken == null) {
 			log.warn("서버에 존재하지 않는 토큰입니다: username={}", username);
