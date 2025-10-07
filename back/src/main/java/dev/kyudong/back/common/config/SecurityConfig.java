@@ -54,10 +54,8 @@ public class SecurityConfig {
 								"/v3/api-docs/**"
 						).permitAll()
 						.requestMatchers(HttpMethod.POST,
-								"/api/v1/users",
-								"/api/v1/users/login",
-								"/api/v1/auth/login",
-								"/api/v1/auth/reissue"
+								"/api/v1/users/**",
+								"/api/v1/auth/**"
 						).permitAll()
 						.anyRequest().authenticated()
 				)
