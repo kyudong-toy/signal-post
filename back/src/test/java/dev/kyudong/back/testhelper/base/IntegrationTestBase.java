@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -18,7 +18,6 @@ import org.testcontainers.utility.DockerImageName;
 @Tag("integration")
 @Disabled
 @Testcontainers
-@Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 public abstract class IntegrationTestBase {
@@ -32,5 +31,10 @@ public abstract class IntegrationTestBase {
 	@ServiceConnection(name = "redis")
 	private static final GenericContainer<?> REDIS_CONTAINER =
 			new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+
+	@Container
+	@ServiceConnection
+	private static final RabbitMQContainer RABBITMQ_CONTAINER =
+			new RabbitMQContainer(DockerImageName.parse("rabbitmq:3-management"));
 
 }
