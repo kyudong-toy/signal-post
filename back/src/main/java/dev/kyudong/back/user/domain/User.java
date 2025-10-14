@@ -32,7 +32,7 @@ public class User {
 	@Column(name = "PASS_WORD", nullable = false, length = 150)
 	private String password;
 
-	@Column(name = "DISPLAY_NAME", length = 30)
+	@Column(name = "DISPLAY_NAME", nullable = false, length = 20)
 	private String displayName;
 
 	@Column(name = "USER_BIO", length = 150)
@@ -63,21 +63,26 @@ public class User {
 	private List<Comment> commentList = new ArrayList<>();
 
 	@Builder
-	private User(String username, String rawPassword, String encodedPassword, UserRole role) {
+	private User(String username, String rawPassword, String encodedPassword, String displayName, UserRole role) {
 		validateUsername(username);
-		validatePassword(rawPassword);
 		this.username = username;
+
+		validatePassword(rawPassword);
 		this.password = encodedPassword;
+
+		validateDisplayName(displayName);
+		this.displayName = displayName;
+
 		this.status = UserStatus.ACTIVE;
 		this.role = role;
 	}
 
-	public static User create(String username, String rawPassword, String encodedPassword) {
-		return new User(username, rawPassword, encodedPassword, UserRole.USER);
+	public static User create(String username, String rawPassword, String encodedPassword, String displayName) {
+		return new User(username, rawPassword, encodedPassword, displayName, UserRole.USER);
 	}
 
-	public static User create(String username, String rawPassword, String encodedPassword, UserRole role) {
-		return new User(username, rawPassword, encodedPassword, role);
+	public static User create(String username, String rawPassword, String encodedPassword, String displayName, UserRole role) {
+		return new User(username, rawPassword, encodedPassword, displayName, role);
 	}
 
 	private void validateUsername(String username) {
@@ -127,7 +132,20 @@ public class User {
 	}
 
 	public void updateDisplayName(String displayName) {
+		validateDisplayName(displayName);
 		this.displayName = displayName;
+	}
+
+	private void validateDisplayName(String displayName) {
+		if (!StringUtils.hasText(displayName)) {
+			throw new InvalidInputException("DisplayName must not be null");
+		}
+		if (username.length() < 3) {
+			throw new InvalidInputException("DisplayName must be at least 3 characters long.");
+		}
+		if (username.length() > 20) {
+			throw new InvalidInputException("DisplayName cannot be longer than 20 characters.");
+		}
 	}
 
 	public void updateBio(String bio) {

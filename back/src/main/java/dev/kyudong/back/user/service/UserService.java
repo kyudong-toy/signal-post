@@ -59,7 +59,7 @@ public class UserService {
 		}
 
 		String encodePassword = passwordEncoder.encode(request.password());
-		User newUser = User.create(request.username(), request.password(), encodePassword);
+		User newUser = User.create(request.username(), request.password(), encodePassword, request.displayName());
 
 		User savedUser = userRepository.save(newUser);
 		log.debug("사용자 생성 성공, id: {}, username: {}", savedUser.getId(), savedUser.getUsername());
