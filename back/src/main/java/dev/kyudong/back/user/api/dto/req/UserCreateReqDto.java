@@ -10,6 +10,10 @@ public record UserCreateReqDto(
 
 		@Size(min = 4, max = 150)
 		@NotBlank(message = "PassWord can not be blank.")
-		String password
+		String password,
+
+		@Size(min = 3, max = 20)
+		@NotBlank(message = "DisplayName can not be blank.")
+		String displayName
 ) {
 }

@@ -8,7 +8,11 @@ export const useSignupSchema = z.object({
   password: z.string()
     .trim()
     .min(4, '비밀번호는 최소 4자 이상이어야 합니다')
-    .max(150, '비밀번호는 150자를 초과할 수 없습니다')
+    .max(150, '비밀번호는 150자를 초과할 수 없습니다'),
+  displayName: z.string()
+    .trim()
+    .min(3, '사용자 이름은 최소 3자 이상이어야 합니다')
+    .max(20, '사용자 이름은 20자를 초과할 수 없습니다')
 });
 
 export type UserCreateReq = z.infer<typeof useSignupSchema>;
