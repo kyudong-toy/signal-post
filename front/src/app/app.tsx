@@ -9,7 +9,7 @@ const App = () => {
   const isInitialized = useInitializeApp();
 
   if (!isInitialized) {
-    // todo: 로딩..
+    return;
   }
 
   return (
@@ -18,7 +18,7 @@ const App = () => {
         <RouterProvider router={ router } />
       </ThemeProvider>
 
-      <AuthPortal />
+      <AuthDialog />
       <Toaster position={ 'top-center' } />
     </>
   )

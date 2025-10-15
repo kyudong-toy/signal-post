@@ -2,39 +2,38 @@ import { DialogDescription, DialogHeader, DialogTitle } from "@shared/ui/dialog.
 import { Input } from "@shared/ui/input.tsx";
 import { Button } from "@shared/ui/button.tsx";
 import { useForm } from "react-hook-form";
-import type { UserCreateReq } from "@/entities/user";
+import { useLoginSchema } from "@/entities/user";
+import type { UserLoginReq } from "@/entities/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@shared/ui/form.tsx";
-import { useSignupSchema } from "@/entities/user";
-import { useSignup } from "../api/useSignup.ts";
+import { useLogin } from "../api/useLogin.ts";
 import { toast } from "sonner";
 
-interface SignupDialogProps {
-  onSwitchToLogin: () => void;
-  onSignupSuccess: () => void;
+interface LoginDialogProps {
+  onSwitchToSignup: () => void;
+  onLoginSuccess: () => void;
 }
 
-export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDialogProps) => {
-  const form = useForm<UserCreateReq>({
-    resolver: zodResolver(useSignupSchema),
+export const LoginDialogForm = ({ onSwitchToSignup, onLoginSuccess }: LoginDialogProps) => {
+  const form = useForm<UserLoginReq>({
+    resolver: zodResolver(useLoginSchema),
     defaultValues: {
       username: "",
       password: "",
-      displayName: "",
     },
   });
 
-  const { mutate: signup } = useSignup();
+  const { mutate: login } = useLogin();
 
-  const onSubmit = (data: UserCreateReq) => {
-    signup(data, {
+  const onSubmit = (data: UserLoginReq) => {
+    login(data, {
       onSuccess: () => {
-        onSignupSuccess();
         form.reset();
-        toast.success('회원가입에 성공했습니다');
+        onLoginSuccess();
+        toast.success('로그인에 성공하였습니다');
       },
       onError: () => {
-        toast.warning('회원가입에 실패했습니다');
+        toast.warning('로그인에 실패하였습니다');
       }
     });
   };
@@ -42,16 +41,19 @@ export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDia
   return (
    <>
     <DialogHeader>
-      <DialogTitle>회원가입</DialogTitle>
+      <DialogTitle>로그인</DialogTitle>
       <DialogDescription>
-        회원가입 후 다양한 글을 접해보세요
+        환영합니다
       </DialogDescription>
     </DialogHeader>
 
     <Form { ...form }>
-      <form onSubmit={ form.handleSubmit(onSubmit) } className="space-y-4">
+      <form
+        onSubmit={ form.handleSubmit(onSubmit) }
+        className="space-y-4"
+      >
         <FormField
-          control={form.control}
+          control={ form.control }
           name="username"
           render={({ field }) => (
             <FormItem>
@@ -60,6 +62,7 @@ export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDia
                 <Input
                   id="username"
                   {...field}
+                  type="text"
                   placeholder="아이디를 입력하세요"
                   autoComplete="username"
                 />
@@ -78,30 +81,10 @@ export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDia
               <FormControl>
                 <Input
                   id="password"
-                  {...field}
                   type="password"
                   placeholder="비밀번호를 입력하세요"
-                  autoComplete="new-password"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="displayName">사용자 이름</FormLabel>
-              <FormControl>
-                <Input
-                  id="displayName"
                   {...field}
-                  type="text"
-                  placeholder="화면에 표시할 이름을 입력하세요"
-                  autoComplete="displayName"
+                  autoComplete="current-password"
                 />
               </FormControl>
               <FormMessage />
@@ -110,7 +93,7 @@ export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDia
         />
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          { form.formState.isSubmitting ? '회원가입 중...' : '회원가입' }
+          { form.formState.isSubmitting ? '로그인 중...' : '로그인' }
         </Button>
       </form>
     </Form>
@@ -119,9 +102,9 @@ export const SignupDialogForm = ({ onSwitchToLogin, onSignupSuccess }: SignupDia
       variant="link"
       size="sm"
       className="w-full"
-      onClick={ onSwitchToLogin }
+      onClick={ onSwitchToSignup }
     >
-      계정이 이미 있으신가요? 로그인
+      계정이 없으신가요? 회원가입
     </Button>
    </>
   );
