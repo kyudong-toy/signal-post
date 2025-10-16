@@ -18,7 +18,8 @@ const App = () => {
         <RouterProvider router={ router } />
       </ThemeProvider>
 
-      <AuthDialog />
+      <LoginDialog />
+      <LogoutAlert />
       <Toaster position={ 'top-center' } />
     </>
   )

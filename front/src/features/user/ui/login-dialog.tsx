@@ -1,13 +1,13 @@
-import { useDialogStore } from '../model/dialogStore';
+import { useLoginDialogStore} from '../model/loginDialogStore.ts';
 import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 import { LoginDialogForm } from './login-dialog-form.tsx';
 import { SignupDialogForm } from './signup-dialog-form.tsx';
 import {Dialog, DialogContent} from "@shared/ui/dialog.tsx";
 import {useEffect, useState} from "react";
 
-export const AuthDialog = () => {
-  const { view, openDialog, closeDialog } = useDialogStore();
+export const LoginDialog = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const { view, openDialog, closeDialog } = useLoginDialogStore();
   const [renderedView, setRenderedView] = useState(view);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export const AuthDialog = () => {
   }, [view]);
 
   if (!isDesktop) {
-    return null;
+    return;
   }
 
   const handleLoginSuccess = () => {

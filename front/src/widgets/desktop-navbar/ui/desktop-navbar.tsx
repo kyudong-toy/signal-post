@@ -9,6 +9,7 @@ import { NotificationTrigger } from "@/features/notification/ui/notification-tri
 import { ChatTrigger } from "@/features/chat/ui/chat-trigger.tsx";
 import { CreateTrigger } from "@/features/post/ui/create-trigger.tsx";
 import { AuthTrigger } from "@/features/user/ui/auth-trigger.tsx";
+import { LoginButton } from "@/features/user/ui/login-button.tsx";
 
 interface DesktopNavbarProps {
   onPanelToggle: (panelName: string) => void;
@@ -22,7 +23,7 @@ const DesktopNavbar = ({ onPanelToggle }: DesktopNavbarProps) => {
       <div className="w-16 bg-white dark:bg-black flex flex-col items-center py-6 space-y-4 z-30">
         <div className="mb-4">
           <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
-            로고
+            {/* 로고 */}
           </div>
         </div>
 
@@ -37,7 +38,7 @@ const DesktopNavbar = ({ onPanelToggle }: DesktopNavbarProps) => {
           </Tooltip>
           <NotificationTrigger onToggle={ () => onPanelToggle('notification') } />
           <CreateTrigger />
-          <ChatTrigger onToggle={ () => onPanelToggle('message') } />
+          <ChatTrigger onToggle={ () => onPanelToggle('chat') } />
           <AuthTrigger />
         </TooltipProvider>
 
@@ -49,7 +50,7 @@ const DesktopNavbar = ({ onPanelToggle }: DesktopNavbarProps) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-80 rounded-xl text-black" side="right" align="end" sideOffset={10}>
             <ThemeSwitcher />
-            { isAuthenticated && <LogoutButton /> }
+            { isAuthenticated ? <LogoutButton /> : <LoginButton /> }
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

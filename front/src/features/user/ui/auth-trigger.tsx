@@ -3,12 +3,12 @@ import { UserIcon } from 'lucide-react';
 import { useAuthStore } from "@/entities/user/model/authStore";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@shared/ui/tooltip";
 import { useMediaQuery } from "@shared/lib/useMediaQuery.ts";
-import { useDialogStore } from "@/features/user/model/dialogStore.ts";
+import { useLoginDialogStore } from "@/features/user/model/loginDialogStore.ts";
 
 export const AuthTrigger = () => {
-  const { isAuthenticated } = useAuthStore();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const openDialog = useDialogStore((state) => state.openDialog);
+  const { isAuthenticated } = useAuthStore();
+  const { openDialog } = useLoginDialogStore();
 
   if (isAuthenticated) {
     return (
@@ -38,20 +38,20 @@ export const AuthTrigger = () => {
         </Tooltip>
       </TooltipProvider>
     );
-  } else {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link to="/login">
-              <UserIcon className="w-6 h-6" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side={ 'top' }>
-            로그인
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
   }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link to="/login">
+            <UserIcon className="w-6 h-6" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side={ 'top' }>
+          로그인
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 };

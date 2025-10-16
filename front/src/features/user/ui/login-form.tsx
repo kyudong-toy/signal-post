@@ -3,15 +3,37 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin } from "../api/useLogin.ts";
 import { Button } from "@shared/ui/button.tsx";
 import type { UserLoginReq } from "@/entities/user";
-import { useLoginSchema } from "@/entities/user";
+import {useAuthStore, useLoginSchema} from "@/entities/user";
 import { Input } from "@shared/ui/input.tsx";
 import { ArrowLeft } from "lucide-react";
 import {Link, useNavigate} from "react-router-dom";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@shared/ui/form.tsx";
-import {toast} from "sonner";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@shared/ui/form.tsx";
+import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
 
 export const LoginForm = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
+  const [isChecking, setIsChecking] = useState(true);
+  const toastShownRef = useRef(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+
+      if (!toastShownRef.current) {
+        toast.warning('이미 로그인되어 있습니다!!!');
+        toastShownRef.current = true;
+      }
+
+      navigate('/', { replace: true });
+    } else {
+      setIsChecking(false);
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isChecking) {
+    return null;
+  }
 
   const handleBack = () => {
     navigate(-1);

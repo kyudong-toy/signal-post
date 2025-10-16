@@ -5,11 +5,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from "@/shared/ui/dropdown-menu";
-import {ThemeSwitcher} from "@/features/theme";
-import {LogoutButton} from "@/features/user";
+import { ThemeSwitcher } from "@/features/theme";
+import { LogoutButton } from "@/features/user";
+import { LoginButton } from "@/features/user/ui/login-button.tsx";
 
 const MobileHeader = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <header className="p-4 border-b flex justify-between items-center z-40 bg-background lg:hidden">
@@ -23,7 +24,7 @@ const MobileHeader = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 rounded-xl">
           <ThemeSwitcher />
-          {isAuthenticated && <LogoutButton />}
+          { isAuthenticated ? <LogoutButton /> : <LoginButton /> }
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
